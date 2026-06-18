@@ -80,7 +80,18 @@ When given a legal query, respond in this EXACT JSON format:
   "judgments": [
     { "name": "Case Name v. Other Party", "citation": "(Year) Volume SCC/AIR Page", "court": "Supreme Court / High Court Name", "year": "Year", "relevance": 85, "snippet": "Key excerpt or ratio decidendi" }
   ],
-  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above. Use proper legal language."
+  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above. Use proper legal language.",
+  "confidence_score": 95,
+  "timeline": [
+    { "year": "Year", "event": "Precedent established or statutory change" }
+  ],
+  "related_cases": [
+    { "name": "Case Name", "citation": "Citation", "court": "Court" }
+  ],
+  "follow_ups": [
+    "Suggested question 1",
+    "Suggested question 2"
+  ]
 }
 
 Rules:
@@ -91,11 +102,46 @@ Rules:
 - Focus on Indian law only
 - Include landmark/leading cases where applicable`;
 
-export async function researchQuery(query) {
-  return callGemini(
-    `Legal research query: "${query}"\n\nProvide a comprehensive legal research response with relevant Indian Acts, Sections, judgments, and analysis.`,
-    RESEARCH_SYSTEM
-  );
+const DEEP_RESEARCH_SYSTEM = `You are NyayaGPT, a senior legal researcher in India. Perform a deep multi-step legal analysis and return a comprehensive legal memorandum.
+
+Respond in this EXACT JSON format:
+{
+  "issue_summary": "Summary of the legal issue(s)",
+  "applicable_laws": [
+    { "act": "Act Name", "section": "Section Code", "description": "Relevance" }
+  ],
+  "judgments": [
+    { "name": "Case Name", "citation": "Citation", "court": "Court", "year": "Year", "strength": 90, "snippet": "Ratio/summary" }
+  ],
+  "arguments_for": ["Argument 1", "Argument 2"],
+  "arguments_against": ["Argument 1", "Argument 2"],
+  "potential_risks": ["Risk 1", "Risk 2"],
+  "conclusion": "Final detailed research memo conclusion",
+  "confidence_score": 95
+}`;
+
+const GENERAL_AI_SYSTEM = `You are a helpful AI assistant. Answer the user's question clearly. Return the answer in this JSON format:
+{
+  "answer": "Your detailed answer here"
+}`;
+
+export async function researchQuery(query, mode = 'legal') {
+  if (mode === 'deep') {
+    return callGemini(
+      `Perform a deep multi-step legal research memo for: "${query}"`,
+      DEEP_RESEARCH_SYSTEM
+    );
+  } else if (mode === 'general') {
+    return callGemini(
+      `Answer this question: "${query}"`,
+      GENERAL_AI_SYSTEM
+    );
+  } else {
+    return callGemini(
+      `Legal research query: "${query}"\n\nProvide a comprehensive legal research response with relevant Indian Acts, Sections, judgments, and analysis.`,
+      RESEARCH_SYSTEM
+    );
+  }
 }
 
 // ── Summarizer API ──────────────────────────────────────────
@@ -368,7 +414,62 @@ export async function findCitations(query) {
   );
 }
 
+// ── Deep Research API ───────────────────────────────────────
+
+export async function deepResearch(query) {
+  return callGemini(
+    `Perform an exhaustive legal research on: "${query}". Provide a comprehensive analysis including applicable acts, relevant landmark judgments, potential risks, and a concluding opinion.`,
+    "You are NyayaGPT, an expert Indian legal researcher. Provide deep, thorough, and highly accurate analysis."
+  );
+}
+
+// ── General AI API ──────────────────────────────────────────
+
+export async function generalAssistant(query) {
+  return callGemini(
+    query,
+    "You are NyayaGPT, a helpful assistant. Provide concise and accurate answers."
+  );
+}
+
 // ── Demo/Mock Data ──────────────────────────────────────────
+
+export function getMockDeepResearchResult() {
+  return {
+    issue_summary: "Criminal liability of a non-executive independent director in cheque bounce cases under Section 138 of the Negotiable Instruments Act, 1881.",
+    applicable_laws: [
+      { act: "Negotiable Instruments Act, 1881", section: "Section 138", description: "Dishonour of cheque for insufficiency, etc., of funds in the account." },
+      { act: "Negotiable Instruments Act, 1881", section: "Section 141", description: "Offences by companies and liability of directors/officers in charge of daily affairs." },
+      { act: "Companies Act, 2013", section: "Section 149(12)", description: "Limitation of liability of independent and non-executive directors." }
+    ],
+    judgments: [
+      { name: "S.M.S. Pharmaceuticals Ltd. v. Neeta Bhalla", citation: "(2005) 8 SCC 89", court: "Supreme Court of India", year: "2005", strength: 98, snippet: "Established that a clear statement must be made in the complaint showing the director was in charge of and responsible for the company's daily conduct." },
+      { name: "Pooja Ravinder Devidasani v. State of Maharashtra", citation: "AIR 2015 SC 675", court: "Supreme Court of India", year: "2014", strength: 95, snippet: "Held that non-executive directors cannot be held liable under Section 138 merely by virtue of holding a designation, without specific overt acts showing operational control." },
+      { name: "KK Ahuja v. V.K. Vora", citation: "(2009) 10 SCC 48", court: "Supreme Court of India", year: "2009", strength: 89, snippet: "Clarified the roles of Managing Directors, Directors, and Officers, reiterating that only those participating in everyday commercial actions are criminally liable." }
+    ],
+    arguments_for: [
+      "The director is designated as a non-executive/independent director and does not draw operational salary.",
+      "The Board resolution files prove the director has no signing authority on the bank accounts of the company.",
+      "No specific averment is present in the complaint detailing the active involvement of the director in issuing the check."
+    ],
+    arguments_against: [
+      "The complainant argues that all directors are collectively liable for company debts under statutory guidelines.",
+      "The name of the director appears on the official company letterhead as an active advisor."
+    ],
+    potential_risks: [
+      "Initial summon proceedings might still require the director to appear and file for quashing under Section 482 CrPC.",
+      "Vaguely worded complaint drafts might delay discharge if operational participation is deemed an issue of trial evidence."
+    ],
+    conclusion: "Under Indian jurisprudence, specifically Section 141 of the NI Act and Section 149(12) of the Companies Act, a non-executive independent director cannot be held criminally liable for cheque bounce offences unless there is a clear, specific, and operational allegation showing they were in charge of the company's day-to-day affairs at the time of the offence. The landmark ruling in S.M.S. Pharmaceuticals and Pooja Ravinder Devidasani provides complete protection, allowing the director to seek quashing of summons from the High Court under Section 482 of the CrPC/BNS.",
+    confidence_score: 95
+  };
+}
+
+export function getMockGeneralAIResult() {
+  return {
+    answer: "To run a background task in a Node.js server, you can use built-in mechanisms like child processes or worker threads for CPU-heavy tasks. For robust, production-grade applications, it is highly recommended to use message queues like BullMQ (redis-backed), Agenda (mongodb-backed), or Celery (if working in a python stack). These allow you to schedule, monitor, and scale background processing nodes independently from your main HTTP router nodes."
+  };
+}
 
 export function getMockResearchResult() {
   return {
@@ -383,6 +484,22 @@ export function getMockResearchResult() {
       { name: 'Shobha Rani v. Madhukar Reddi', citation: '(1988) 1 SCC 105', court: 'Supreme Court of India', year: '1988', relevance: 78, snippet: 'Defined cruelty broadly to include both physical and mental cruelty, establishing that persistent demands for dowry constitute cruelty under Section 498A.' },
     ],
     analysis: 'Based on the legal research, Section 498A of the Indian Penal Code is the primary provision dealing with cruelty by husband or his relatives against a married woman. This section was introduced by the Criminal Law (Second Amendment) Act, 1983, to combat the increasing menace of dowry deaths and domestic violence.\n\nThe Supreme Court in Arnesh Kumar v. State of Bihar (2014) 8 SCC 273 recognized the potential misuse of Section 498A and laid down important safeguards, including a mandatory checklist for police officers before arrest. This judgment was a landmark in balancing the protection of women with prevention of misuse.\n\nIn addition to criminal remedies under Section 498A IPC, the Protection of Women from Domestic Violence Act, 2005 provides civil remedies including protection orders, residence orders, monetary relief, and custody orders. Section 13 of the Hindu Marriage Act, 1955 allows divorce on grounds of cruelty, providing a matrimonial remedy alongside criminal provisions.',
+    confidence_score: 92,
+    timeline: [
+      { year: '1983', event: 'Section 498A added to IPC by Criminal Law Amendment Act.' },
+      { 'year': '1988', event: 'Supreme Court defines physical and mental cruelty in Shobha Rani case.' },
+      { year: '2005', event: 'Protection of Women from Domestic Violence Act enacted.' },
+      { year: '2014', event: 'Arnesh Kumar guidelines issued to prevent automatic arrests.' }
+    ],
+    related_cases: [
+      { name: 'Preeti Gupta v. State of Jharkhand', citation: '(2010) 7 SCC 667', court: 'Supreme Court of India' },
+      { name: 'Sushil Kumar Sharma v. Union of India', citation: '(2005) 6 SCC 281', court: 'Supreme Court of India' }
+    ],
+    follow_ups: [
+      'What are the guidelines for registering FIR in matrimonial disputes?',
+      'How to apply for anticipatory bail in a Section 498A case?',
+      'Are there amendments proposed for BNS regarding domestic violence?'
+    ]
   };
 }
 
