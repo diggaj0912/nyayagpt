@@ -325,6 +325,49 @@ export async function analyzeCase(text, docType) {
   );
 }
 
+// ── Citation Finder API ──────────────────────────────────────
+
+const CITATION_SYSTEM = `You are NyayaGPT, an expert Indian legal citation researcher. Given a legal issue, statute, or precedent, return a structured list of relevant judgments, cited precedents, court hierarchies, and citation connections (graph).
+
+Respond in this EXACT JSON format:
+{
+  "judgments": [
+    { 
+      "name": "Case Name", 
+      "citation": "Citation", 
+      "court": "Court Name", 
+      "year": "Year", 
+      "citation_count": 87, 
+      "citation_strength": "High", 
+      "hierarchy_level": "Supreme Court", 
+      "relevance_score": 95, 
+      "snippet": "Ratio decidendi/excerpt" 
+    }
+  ],
+  "graph": {
+    "nodes": [
+      { "id": "1", "label": "Case Name 1", "type": "supreme_court" },
+      { "id": "2", "label": "Case Name 2", "type": "high_court" }
+    ],
+    "links": [
+      { "source": "1", "target": "2", "type": "cited_by" }
+    ]
+  }
+}
+
+Rules:
+- Provide 3-6 highly relevant citations
+- Cite exact court levels (e.g. Supreme Court of India, Delhi High Court)
+- Citation strength should be "High", "Medium", or "Low" based on frequency of referral
+- Graph links represent citation connections between the cases in the nodes list`;
+
+export async function findCitations(query) {
+  return callGemini(
+    `Find legal citations and build a connection graph for the following query/issue: "${query}"`,
+    CITATION_SYSTEM
+  );
+}
+
 // ── Demo/Mock Data ──────────────────────────────────────────
 
 export function getMockResearchResult() {
@@ -410,5 +453,56 @@ export function getMockAnalysis() {
     ],
     overall_risk_score: 68,
     recommendation: 'The agreement requires significant revision before execution. The most critical issues are the vague IP assignment clause and the complete absence of data protection terms (mandatory under DPDP Act 2023). We recommend adding Force Majeure, limitation of liability, data protection, and non-solicitation clauses. The arbitration clause should specify seat, language, and governing rules. GST and stamp duty compliance should be addressed explicitly.',
+  };
+}
+
+export function getMockCitationResult() {
+  return {
+    judgments: [
+      {
+        name: "S.P. Gupta v. President of India",
+        citation: "AIR 1982 SC 149",
+        court: "Supreme Court of India",
+        year: "1981",
+        citation_count: 245,
+        citation_strength: "High",
+        hierarchy_level: "Supreme Court",
+        relevance_score: 98,
+        snippet: "A landmark judgment establishing the concept of Public Interest Litigation (PIL) in India, holding that any member of the public can approach the court for public injury."
+      },
+      {
+        name: "Bandhua Mukti Morcha v. Union of India",
+        citation: "(1984) 3 SCC 161",
+        court: "Supreme Court of India",
+        year: "1984",
+        citation_count: 189,
+        citation_strength: "High",
+        hierarchy_level: "Supreme Court",
+        relevance_score: 92,
+        snippet: "Reinforced PIL admissibility and held that the Court can appoint commissioners to locate bonded laborers and report back, bypassing rigid adversarial procedures."
+      },
+      {
+        name: "Sheela Barse v. State of Maharashtra",
+        citation: "(1983) 2 SCC 96",
+        court: "Supreme Court of India",
+        year: "1983",
+        citation_count: 78,
+        citation_strength: "Medium",
+        hierarchy_level: "Supreme Court",
+        relevance_score: 85,
+        snippet: "Addressed rights of women prisoners, establishing that legal aid is a fundamental right under Article 21 and laying down guidelines for custodial treatment."
+      }
+    ],
+    graph: {
+      nodes: [
+        { id: "sp_gupta", label: "S.P. Gupta v. President of India (1981)", type: "supreme_court" },
+        { id: "bandhua", label: "Bandhua Mukti Morcha v. UOI (1984)", type: "supreme_court" },
+        { id: "sheela", label: "Sheela Barse v. State of Maha (1983)", type: "supreme_court" }
+      ],
+      links: [
+        { source: "bandhua", target: "sp_gupta", type: "cited_by" },
+        { source: "sheela", target: "sp_gupta", type: "cited_by" }
+      ]
+    }
   };
 }

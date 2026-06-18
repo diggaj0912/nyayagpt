@@ -11,6 +11,8 @@ const NAV_ITEMS = [
   { path: '/research', icon: '🔍', label: 'AI Research' },
   { path: '/summarizer', icon: '📄', label: 'Summarizer' },
   { path: '/drafts', icon: '✍️', label: 'Draft Generator' },
+  { path: '/citation-finder', icon: '⚖️', label: 'Citation Finder' },
+  { path: '/workspace', icon: '💼', label: 'Workspace Canvas' },
   { path: '/analyzer', icon: '🔬', label: 'Case Analyzer' },
   { section: 'LIBRARY' },
   { path: '/library', icon: '📁', label: 'My Documents' },

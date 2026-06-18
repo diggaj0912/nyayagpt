@@ -16,6 +16,8 @@ import { renderDrafts, initDrafts } from './pages/drafts.js';
 import { renderAnalyzer, initAnalyzer } from './pages/analyzer.js';
 import { renderLibrary, initLibrary } from './pages/library.js';
 import { renderSettings, initSettings } from './pages/settings.js';
+import { renderCitationFinder, initCitationFinder } from './pages/citation_finder.js';
+import { renderWorkspace, initWorkspace } from './pages/workspace.js';
 
 // Components
 import { renderSidebar, initSidebar, updateSidebarActive } from './components/sidebar.js';
@@ -119,6 +121,20 @@ router.register('/analyzer', (path) => {
   if (!requireAuth(path)) return;
   renderAppPage(path, renderAnalyzer());
   initAnalyzer();
+});
+
+// Citation Finder
+router.register('/citation-finder', (path) => {
+  if (!requireAuth(path)) return;
+  renderAppPage(path, renderCitationFinder());
+  initCitationFinder();
+});
+
+// Workspace Canvas
+router.register('/workspace', (path) => {
+  if (!requireAuth(path)) return;
+  renderAppPage(path, renderWorkspace());
+  initWorkspace();
 });
 
 // Document Library
