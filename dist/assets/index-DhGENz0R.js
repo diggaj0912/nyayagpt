@@ -1,4 +1,4 @@
-(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const i of document.querySelectorAll('link[rel="modulepreload"]'))n(i);new MutationObserver(i=>{for(const s of i)if(s.type==="childList")for(const r of s.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function a(i){const s={};return i.integrity&&(s.integrity=i.integrity),i.referrerPolicy&&(s.referrerPolicy=i.referrerPolicy),i.crossOrigin==="use-credentials"?s.credentials="include":i.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function n(i){if(i.ep)return;i.ep=!0;const s=a(i);fetch(i.href,s)}})();class ve{constructor(){this.routes={},this.currentRoute=null,this.beforeEach=null,window.addEventListener("hashchange",()=>this.resolve())}register(t,a){return this.routes[t]=a,this}navigate(t){window.location.hash=t}getCurrentPath(){return window.location.hash.slice(1)||"/"}async resolve(){const t=this.getCurrentPath(),a=this.routes[t]||this.routes["/404"];this.beforeEach&&!this.beforeEach(t,this.currentRoute)||(this.currentRoute=t,a&&await a(t))}start(){this.resolve()}}const g=new ve,N="nyayagpt_",l={get(e,t=null){try{const a=localStorage.getItem(N+e);return a?JSON.parse(a):t}catch{return t}},set(e,t){try{localStorage.setItem(N+e,JSON.stringify(t))}catch(a){console.warn("Storage full or unavailable:",a)}},remove(e){localStorage.removeItem(N+e)},clear(){Object.keys(localStorage).filter(e=>e.startsWith(N)).forEach(e=>localStorage.removeItem(e))},getUser(){return this.get("user",null)},setUser(e){this.set("user",e)},isLoggedIn(){return!!this.getUser()},logout(){this.remove("user")},getDocuments(){return this.get("documents",[])},saveDocument(e){const t=this.getDocuments();return e.id=e.id||crypto.randomUUID(),e.createdAt=e.createdAt||new Date().toISOString(),t.unshift(e),this.set("documents",t),e},getResearchHistory(){return this.get("research_history",[])},saveResearch(e){const t=this.getResearchHistory();return e.id=e.id||crypto.randomUUID(),e.createdAt=new Date().toISOString(),t.unshift(e),this.set("research_history",t.slice(0,50)),e},getActivity(){return this.get("activity",[])},logActivity(e,t,a){const n=this.getActivity();n.unshift({id:crypto.randomUUID(),type:e,title:t,icon:a,timestamp:new Date().toISOString()}),this.set("activity",n.slice(0,20))},getUsage(){return this.get("usage",{research:0,summaries:0,drafts:0,analyses:0})},incrementUsage(e){const t=this.getUsage();t[e]=(t[e]||0)+1,this.set("usage",t)}};function fe(){return`
+(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const i of document.querySelectorAll('link[rel="modulepreload"]'))n(i);new MutationObserver(i=>{for(const s of i)if(s.type==="childList")for(const r of s.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function a(i){const s={};return i.integrity&&(s.integrity=i.integrity),i.referrerPolicy&&(s.referrerPolicy=i.referrerPolicy),i.crossOrigin==="use-credentials"?s.credentials="include":i.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function n(i){if(i.ep)return;i.ep=!0;const s=a(i);fetch(i.href,s)}})();class xe{constructor(){this.routes={},this.currentRoute=null,this.beforeEach=null,window.addEventListener("hashchange",()=>this.resolve())}register(t,a){return this.routes[t]=a,this}navigate(t){window.location.hash=t}getCurrentPath(){return window.location.hash.slice(1)||"/"}async resolve(){const t=this.getCurrentPath(),a=this.routes[t]||this.routes["/404"];this.beforeEach&&!this.beforeEach(t,this.currentRoute)||(this.currentRoute=t,a&&await a(t))}start(){this.resolve()}}const y=new xe,N="nyayagpt_",p={get(e,t=null){try{const a=localStorage.getItem(N+e);return a?JSON.parse(a):t}catch{return t}},set(e,t){try{localStorage.setItem(N+e,JSON.stringify(t))}catch(a){console.warn("Storage full or unavailable:",a)}},remove(e){localStorage.removeItem(N+e)},clear(){Object.keys(localStorage).filter(e=>e.startsWith(N)).forEach(e=>localStorage.removeItem(e))},getUser(){return this.get("user",null)},setUser(e){this.set("user",e)},isLoggedIn(){return!!this.getUser()},logout(){this.remove("user")},getDocuments(){return this.get("documents",[])},saveDocument(e){const t=this.getDocuments();return e.id=e.id||crypto.randomUUID(),e.createdAt=e.createdAt||new Date().toISOString(),t.unshift(e),this.set("documents",t),e},getResearchHistory(){return this.get("research_history",[])},saveResearch(e){const t=this.getResearchHistory();return e.id=e.id||crypto.randomUUID(),e.createdAt=new Date().toISOString(),t.unshift(e),this.set("research_history",t.slice(0,50)),e},getActivity(){return this.get("activity",[])},logActivity(e,t,a){const n=this.getActivity();n.unshift({id:crypto.randomUUID(),type:e,title:t,icon:a,timestamp:new Date().toISOString()}),this.set("activity",n.slice(0,20))},getUsage(){return this.get("usage",{research:0,summaries:0,drafts:0,analyses:0})},incrementUsage(e){const t=this.getUsage();t[e]=(t[e]||0)+1,this.set("usage",t)}};function we(){return`
     <div class="landing-page">
       <!-- Navigation -->
       <nav class="landing-nav" id="landing-nav">
@@ -233,14 +233,14 @@
         </div>
       </footer>
     </div>
-  `}function he(){const e=document.getElementById("landing-nav");if(e){const t=()=>{e.classList.toggle("scrolled",window.scrollY>50)};window.addEventListener("scroll",t),t()}document.querySelectorAll('.landing-page a[href^="#features"], .landing-page a[href^="#pricing"], .landing-page a[href^="#about"]').forEach(t=>{t.addEventListener("click",a=>{const n=t.getAttribute("href").slice(1),i=document.getElementById(n);i&&(a.preventDefault(),i.scrollIntoView({behavior:"smooth",block:"start"}))})})}const X={success:"✓",error:"✕",info:"ℹ",warning:"⚠"},Q={success:"Success",error:"Error",info:"Info",warning:"Warning"};let be=0;function M(e,t="info",a=4e3){const n=document.getElementById("toast-container");if(!n)return;const i=`toast-${++be}`,s=document.createElement("div");return s.className=`toast toast-${t}`,s.id=i,s.innerHTML=`
+  `}function Ae(){const e=document.getElementById("landing-nav");if(e){const t=()=>{e.classList.toggle("scrolled",window.scrollY>50)};window.addEventListener("scroll",t),t()}document.querySelectorAll('.landing-page a[href^="#features"], .landing-page a[href^="#pricing"], .landing-page a[href^="#about"]').forEach(t=>{t.addEventListener("click",a=>{const n=t.getAttribute("href").slice(1),i=document.getElementById(n);i&&(a.preventDefault(),i.scrollIntoView({behavior:"smooth",block:"start"}))})})}const X={success:"✓",error:"✕",info:"ℹ",warning:"⚠"},Z={success:"Success",error:"Error",info:"Info",warning:"Warning"};let Se=0;function z(e,t="info",a=4e3){const n=document.getElementById("toast-container");if(!n)return;const i=`toast-${++Se}`,s=document.createElement("div");return s.className=`toast toast-${t}`,s.id=i,s.innerHTML=`
     <span class="toast-icon">${X[t]||X.info}</span>
     <div class="toast-content">
-      <div class="toast-title">${Q[t]||Q.info}</div>
+      <div class="toast-title">${Z[t]||Z.info}</div>
       <div class="toast-message">${e}</div>
     </div>
     <button class="toast-close" onclick="document.getElementById('${i}').classList.add('toast-exit'); setTimeout(() => document.getElementById('${i}')?.remove(), 300)">✕</button>
-  `,n.appendChild(s),a>0&&setTimeout(()=>{s.parentNode&&(s.classList.add("toast-exit"),setTimeout(()=>s.remove(),300))},a),i}const p={success:(e,t)=>M(e,"success",t),error:(e,t)=>M(e,"error",t),info:(e,t)=>M(e,"info",t),warning:(e,t)=>M(e,"warning",t)};function xe(){return`
+  `,n.appendChild(s),a>0&&setTimeout(()=>{s.parentNode&&(s.classList.add("toast-exit"),setTimeout(()=>s.remove(),300))},a),i}const u={success:(e,t)=>z(e,"success",t),error:(e,t)=>z(e,"error",t),info:(e,t)=>z(e,"info",t),warning:(e,t)=>z(e,"warning",t)};function $e(){return`
     <div class="auth-page">
       <div class="auth-card animate-scale-in">
         <a href="#/" class="auth-logo">
@@ -274,7 +274,7 @@
         </div>
       </div>
     </div>
-  `}function we(){return`
+  `}function Ie(){return`
     <div class="auth-page">
       <div class="auth-card animate-scale-in">
         <a href="#/" class="auth-logo">
@@ -322,7 +322,7 @@
         </div>
       </div>
     </div>
-  `}function Ae(){const e=document.getElementById("login-form");e&&e.addEventListener("submit",a=>{a.preventDefault();const n=document.getElementById("login-email").value.trim(),i=document.getElementById("login-password").value;if(!n||!i){p.error("Please fill in all fields");return}const s=l.getUser();if(s&&s.email===n){p.success("Welcome back!"),g.navigate("/dashboard");return}const r={id:crypto.randomUUID(),name:n.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g,o=>o.toUpperCase()),email:n,role:"lawyer",plan:"free",createdAt:new Date().toISOString()};l.setUser(r),p.success("Welcome to NyayaGPT!"),g.navigate("/dashboard")});const t=document.getElementById("google-login-btn");t&&t.addEventListener("click",()=>{p.info("Google OAuth will be available in the next update")})}function Se(){const e=document.getElementById("signup-form");e&&e.addEventListener("submit",a=>{a.preventDefault();const n=document.getElementById("signup-name").value.trim(),i=document.getElementById("signup-email").value.trim(),s=document.getElementById("signup-password").value,r=document.getElementById("signup-role").value;if(!n||!i||!s){p.error("Please fill in all fields");return}if(s.length<8){p.error("Password must be at least 8 characters");return}const o={id:crypto.randomUUID(),name:n,email:i,role:r,plan:"free",createdAt:new Date().toISOString()};l.setUser(o),l.logActivity("signup","Account created","🎉"),p.success("Account created! Welcome to NyayaGPT"),g.navigate("/dashboard")});const t=document.getElementById("google-signup-btn");t&&t.addEventListener("click",()=>{p.info("Google OAuth will be available in the next update")})}function Ee(e,t){const a=new Blob([e],{type:"text/plain;charset=utf-8"}),n=URL.createObjectURL(a),i=document.createElement("a");i.href=n,i.download=t,document.body.appendChild(i),i.click(),document.body.removeChild(i),URL.revokeObjectURL(n)}function D(e,t,a){const n=`<!DOCTYPE html>
+  `}function Ee(){const e=document.getElementById("login-form");e&&e.addEventListener("submit",a=>{a.preventDefault();const n=document.getElementById("login-email").value.trim(),i=document.getElementById("login-password").value;if(!n||!i){u.error("Please fill in all fields");return}const s=p.getUser();if(s&&s.email===n){u.success("Welcome back!"),y.navigate("/dashboard");return}const r={id:crypto.randomUUID(),name:n.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g,o=>o.toUpperCase()),email:n,role:"lawyer",plan:"free",createdAt:new Date().toISOString()};p.setUser(r),u.success("Welcome to NyayaGPT!"),y.navigate("/dashboard")});const t=document.getElementById("google-login-btn");t&&t.addEventListener("click",()=>{u.info("Google OAuth will be available in the next update")})}function ke(){const e=document.getElementById("signup-form");e&&e.addEventListener("submit",a=>{a.preventDefault();const n=document.getElementById("signup-name").value.trim(),i=document.getElementById("signup-email").value.trim(),s=document.getElementById("signup-password").value,r=document.getElementById("signup-role").value;if(!n||!i||!s){u.error("Please fill in all fields");return}if(s.length<8){u.error("Password must be at least 8 characters");return}const o={id:crypto.randomUUID(),name:n,email:i,role:r,plan:"free",createdAt:new Date().toISOString()};p.setUser(o),p.logActivity("signup","Account created","🎉"),u.success("Account created! Welcome to NyayaGPT"),y.navigate("/dashboard")});const t=document.getElementById("google-signup-btn");t&&t.addEventListener("click",()=>{u.info("Google OAuth will be available in the next update")})}function Ce(e,t){const a=new Blob([e],{type:"text/plain;charset=utf-8"}),n=URL.createObjectURL(a),i=document.createElement("a");i.href=n,i.download=t,document.body.appendChild(i),i.click(),document.body.removeChild(i),URL.revokeObjectURL(n)}function R(e,t,a){const n=`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -354,7 +354,7 @@
   ${e}
   <div class="footer">Generated by NyayaGPT — AI Legal Intelligence for India | ${new Date().toLocaleDateString("en-IN")}</div>
 </body>
-</html>`,i=new Blob([n],{type:"text/html;charset=utf-8"}),s=URL.createObjectURL(i),r=document.createElement("a");r.href=s,r.download=a.replace(".pdf",".html"),document.body.appendChild(r),r.click(),document.body.removeChild(r),URL.revokeObjectURL(s)}function Ie(e,t){const a=window.open("","_blank");a.document.write(`<!DOCTYPE html>
+</html>`,i=new Blob([n],{type:"text/html;charset=utf-8"}),s=URL.createObjectURL(i),r=document.createElement("a");r.href=s,r.download=a.replace(".pdf",".html"),document.body.appendChild(r),r.click(),document.body.removeChild(r),URL.revokeObjectURL(s)}function _e(e,t){const a=window.open("","_blank");a.document.write(`<!DOCTYPE html>
 <html>
 <head>
   <title>${t}</title>
@@ -365,7 +365,7 @@
   </style>
 </head>
 <body>${e}<div class="footer">Generated by NyayaGPT</div></body>
-</html>`),a.document.close(),a.print()}function se(e){return new Date(e).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}function W(e){const t=new Date,a=new Date(e),n=Math.floor((t-a)/1e3);return n<60?"just now":n<3600?`${Math.floor(n/60)}m ago`:n<86400?`${Math.floor(n/3600)}h ago`:n<604800?`${Math.floor(n/86400)}d ago`:se(e)}const Y=Object.freeze(Object.defineProperty({__proto__:null,downloadAsHTML:D,downloadAsText:Ee,formatDate:se,printContent:Ie,timeAgo:W},Symbol.toStringTag,{value:"Module"})),$e=[{icon:"🔍",title:"AI Research",desc:"Search Indian legal knowledge",route:"/research",color:"card-icon-purple"},{icon:"📄",title:"Summarize",desc:"Upload & summarize judgments",route:"/summarizer",color:"card-icon-green"},{icon:"✍️",title:"Draft",desc:"Generate legal documents",route:"/drafts",color:"card-icon-gold"},{icon:"🔬",title:"Analyze",desc:"Analyze cases & contracts",route:"/analyzer",color:"card-icon-red"}];function ke(){var d;const e=l.getUser(),t=l.getUsage(),a=l.getActivity(),n=l.getDocuments(),i=Ce(),s=$e.map(c=>`
+</html>`),a.document.close(),a.print()}function de(e){return new Date(e).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}function W(e){const t=new Date,a=new Date(e),n=Math.floor((t-a)/1e3);return n<60?"just now":n<3600?`${Math.floor(n/60)}m ago`:n<86400?`${Math.floor(n/3600)}h ago`:n<604800?`${Math.floor(n/86400)}d ago`:de(e)}const J=Object.freeze(Object.defineProperty({__proto__:null,downloadAsHTML:R,downloadAsText:Ce,formatDate:de,printContent:_e,timeAgo:W},Symbol.toStringTag,{value:"Module"})),Le=[{icon:"🔍",title:"AI Research",desc:"Search Indian legal knowledge",route:"/research",color:"card-icon-purple"},{icon:"📄",title:"Summarize",desc:"Upload & summarize judgments",route:"/summarizer",color:"card-icon-green"},{icon:"✍️",title:"Draft",desc:"Generate legal documents",route:"/drafts",color:"card-icon-gold"},{icon:"🔬",title:"Analyze",desc:"Analyze cases & contracts",route:"/analyzer",color:"card-icon-red"}];function Te(){var l;const e=p.getUser(),t=p.getUsage(),a=p.getActivity(),n=p.getDocuments(),i=Pe(),s=Le.map(c=>`
     <div class="quick-action-card card-interactive" onclick="window.location.hash='${c.route}'">
       <div class="quick-action-icon ${c.color}">${c.icon}</div>
       <h4>${c.title}</h4>
@@ -383,10 +383,10 @@
         <div class="empty-state-icon">📋</div>
         <h4>No activity yet</h4>
         <p>Start using NyayaGPT to see your activity here.</p>
-      </div>`,o={free:{research:5,summaries:3,drafts:3,analyses:2}},m=o[e==null?void 0:e.plan]||o.free;return`
+      </div>`,o={free:{research:5,summaries:3,drafts:3,analyses:2}},d=o[e==null?void 0:e.plan]||o.free;return`
     <div class="page-content animate-fade-up">
       <div class="dashboard-welcome">
-        <h2>${i}, ${((d=e==null?void 0:e.name)==null?void 0:d.split(" ")[0])||"there"} 👋</h2>
+        <h2>${i}, ${((l=e==null?void 0:e.name)==null?void 0:l.split(" ")[0])||"there"} 👋</h2>
         <p>Your AI-powered legal intelligence dashboard</p>
       </div>
 
@@ -403,10 +403,10 @@
         <div>
           <div class="usage-card">
             <h4>Usage This Month</h4>
-            ${z("Research",t.research||0,m.research)}
-            ${z("Summaries",t.summaries||0,m.summaries)}
-            ${z("Drafts",t.drafts||0,m.drafts)}
-            ${z("Analyses",t.analyses||0,m.analyses)}
+            ${M("Research",t.research||0,d.research)}
+            ${M("Summaries",t.summaries||0,d.summaries)}
+            ${M("Drafts",t.drafts||0,d.drafts)}
+            ${M("Analyses",t.analyses||0,d.analyses)}
             ${(e==null?void 0:e.plan)==="free"?`
               <div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, rgba(108,92,231,0.1), rgba(0,184,148,0.05)); border-radius: var(--radius-sm); border: 1px solid rgba(108,92,231,0.2);">
                 <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 8px;">Want unlimited access?</p>
@@ -428,7 +428,7 @@
         </div>
       </div>
     </div>
-  `}function z(e,t,a){const n=Math.min(t/a*100,100),i=t>=a;return`
+  `}function M(e,t,a){const n=Math.min(t/a*100,100),i=t>=a;return`
     <div class="usage-item">
       <div class="usage-item-header">
         <span class="usage-item-label">${e}</span>
@@ -438,17 +438,24 @@
         <div class="progress-fill" style="width: ${n}%; ${i?"background: var(--danger);":""}"></div>
       </div>
     </div>
-  `}function Ce(){const e=new Date().getHours();return e<12?"Good morning":e<17?"Good afternoon":"Good evening"}const Le="modulepreload",Pe=function(e){return"/"+e},Z={},J=function(t,a,n){let i=Promise.resolve();if(a&&a.length>0){let r=function(d){return Promise.all(d.map(c=>Promise.resolve(c).then(f=>({status:"fulfilled",value:f}),f=>({status:"rejected",reason:f}))))};document.getElementsByTagName("link");const o=document.querySelector("meta[property=csp-nonce]"),m=(o==null?void 0:o.nonce)||(o==null?void 0:o.getAttribute("nonce"));i=r(a.map(d=>{if(d=Pe(d),d in Z)return;Z[d]=!0;const c=d.endsWith(".css"),f=c?'[rel="stylesheet"]':"";if(document.querySelector(`link[href="${d}"]${f}`))return;const y=document.createElement("link");if(y.rel=c?"stylesheet":Le,c||(y.as="script"),y.crossOrigin="",y.href=d,m&&y.setAttribute("nonce",m),document.head.appendChild(y),c)return new Promise((k,R)=>{y.addEventListener("load",k),y.addEventListener("error",()=>R(new Error(`Unable to preload CSS for ${d}`)))})}))}function s(r){const o=new Event("vite:preloadError",{cancelable:!0});if(o.payload=r,window.dispatchEvent(o),!o.defaultPrevented)throw r}return i.then(r=>{for(const o of r||[])o.status==="rejected"&&s(o.reason);return t().catch(s)})},Te="https://generativelanguage.googleapis.com/v1beta/models",_e="gemini-2.0-flash";function re(){return l.get("gemini_api_key","")}function w(){return!!re()}async function C(e,t=""){var m,d,c,f,y,k,R,V;const a=re();if(!a)throw new Error("API_KEY_MISSING");const n=`${Te}/${_e}:generateContent?key=${a}`,i={contents:[{parts:[{text:e}]}],generationConfig:{temperature:.7,topP:.95,maxOutputTokens:8192,responseMimeType:"application/json"}};t&&(i.systemInstruction={parts:[{text:t}]});const s=await fetch(n,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(i)});if(!s.ok){const S=await s.json().catch(()=>({}));throw s.status===400&&((d=(m=S==null?void 0:S.error)==null?void 0:m.message)!=null&&d.includes("API key"))?new Error("API_KEY_INVALID"):new Error(((c=S==null?void 0:S.error)==null?void 0:c.message)||`Gemini API error: ${s.status}`)}const r=await s.json(),o=(V=(R=(k=(y=(f=r==null?void 0:r.candidates)==null?void 0:f[0])==null?void 0:y.content)==null?void 0:k.parts)==null?void 0:R[0])==null?void 0:V.text;if(!o)throw new Error("Empty response from Gemini");try{return JSON.parse(o)}catch{const S=o.match(/```(?:json)?\s*([\s\S]*?)```/);return S?JSON.parse(S[1].trim()):{raw:o}}}const De=`You are NyayaGPT, an expert Indian legal research assistant. You have extensive knowledge of Indian law including all Acts, Sections, IPC, CrPC, CPC, Constitution of India, Supreme Court judgments, and High Court judgments.
-
-When given a legal query, respond in this EXACT JSON format:
+  `}function Pe(){const e=new Date().getHours();return e<12?"Good morning":e<17?"Good afternoon":"Good evening"}const De="modulepreload",Re=function(e){return"/"+e},ee={},Y=function(t,a,n){let i=Promise.resolve();if(a&&a.length>0){let r=function(l){return Promise.all(l.map(c=>Promise.resolve(c).then(m=>({status:"fulfilled",value:m}),m=>({status:"rejected",reason:m}))))};document.getElementsByTagName("link");const o=document.querySelector("meta[property=csp-nonce]"),d=(o==null?void 0:o.nonce)||(o==null?void 0:o.getAttribute("nonce"));i=r(a.map(l=>{if(l=Re(l),l in ee)return;ee[l]=!0;const c=l.endsWith(".css"),m=c?'[rel="stylesheet"]':"";if(document.querySelector(`link[href="${l}"]${m}`))return;const f=document.createElement("link");if(f.rel=c?"stylesheet":De,c||(f.as="script"),f.crossOrigin="",f.href=l,d&&f.setAttribute("nonce",d),document.head.appendChild(f),c)return new Promise(($,h)=>{f.addEventListener("load",$),f.addEventListener("error",()=>h(new Error(`Unable to preload CSS for ${l}`)))})}))}function s(r){const o=new Event("vite:preloadError",{cancelable:!0});if(o.payload=r,window.dispatchEvent(o),!o.defaultPrevented)throw r}return i.then(r=>{for(const o of r||[])o.status==="rejected"&&s(o.reason);return t().catch(s)})},te={acts:[{id:"bns_318",name:"Bharatiya Nyaya Sanhita, 2023",section:"Section 318",keywords:["cheating","fraud","dishonest","induce","deceive","bns","misrepresentation","318"],description:"Defines cheating and prescribes punishment, replacing Section 415 and 420 of the Indian Penal Code (IPC).",details:"Whoever, by deceiving any person, fraudulently or dishonestly induces the person so deceived to deliver any property to any person, or to consent that any person shall retain any property, or intentionally induces the person so deceived to do or omit to do anything which he would not do or omit if he were not so deceived, is said to 'cheat'. Punishable with up to 3 years imprisonment or fine."},{id:"ipc_420",name:"Indian Penal Code, 1860",section:"Section 420",keywords:["cheating","fraud","dishonest","induce","property","ipc","420","misrepresentation"],description:"Cheating and dishonestly inducing delivery of property. Replaced by Section 318 of BNS in 2023.",details:"Deals with cheating and dishonestly inducing delivery of property or alteration/destruction of a valuable security. Punishable with up to 7 years imprisonment and fine."},{id:"ni_138",name:"Negotiable Instruments Act, 1881",section:"Section 138",keywords:["cheque","check","bounce","dishonor","insufficient","negotiable","ni act","138","bank"],description:"Criminal liability for dishonour of cheque due to insufficiency of funds.",details:"Where any cheque drawn by a person on an account maintained by him with a banker for payment of any amount of money to another person for the discharge of any debt or other liability, is returned by the bank unpaid, either because of insufficient funds or if it exceeds the amount arranged to be paid. Punishable with up to 2 years imprisonment or fine up to twice the cheque amount."},{id:"ni_141",name:"Negotiable Instruments Act, 1881",section:"Section 141",keywords:["company","director","liability","cheque","bounce","141","vicarious","partner"],description:"Vicarious liability of company directors and key personnel for cheque bounce.",details:"If the person committing an offence under Section 138 is a company, every person who, at the time the offence was committed, was in charge of, and was responsible to the company for the conduct of the business, shall be deemed guilty of the offence."},{id:"contract_2h",name:"Indian Contract Act, 1872",section:"Section 2(h)",keywords:["contract","agreement","enforceable","valid","legal","elements"],description:"Definition of contract: An agreement enforceable by law is a contract.",details:"An agreement enforceable by law is a contract. Essential elements include free consent, competent parties, lawful consideration, and a lawful object."},{id:"contract_73",name:"Indian Contract Act, 1872",section:"Section 73",keywords:["breach","damages","compensation","loss","contract","liquidated","73"],description:"Compensation for loss or damage caused by breach of contract.",details:"When a contract has been broken, the party who suffers by such breach is entitled to receive, from the party who has broken the contract, compensation for any loss or damage caused to him thereby, which naturally arose in the usual course of things."},{id:"contract_56",name:"Indian Contract Act, 1872",section:"Section 56",keywords:["frustration","impossible","force majeure","void","contract","56","supervening","unlawful"],description:"Agreement to do impossible act and the doctrine of frustration of contract.",details:"A contract to do an act which, after the contract is made, becomes impossible, or, by reason of some event which the promisor could not prevent, unlawful, becomes void when the act becomes impossible or unlawful."},{id:"const_21",name:"Constitution of India",section:"Article 21",keywords:["privacy","liberty","life","personal liberty","fundamental","rights","21"],description:"Protection of life and personal liberty.",details:"No person shall be deprived of his life or personal liberty except according to procedure established by law. The Supreme Court has expanded this to include privacy, clean air, livelihood, and speedy trial."},{id:"const_19",name:"Constitution of India",section:"Article 19",keywords:["speech","expression","freedom","assemble","association","trade","restrictions","19"],description:"Protection of freedom of speech, expression, assembly, movement, and trade.",details:"Guarantees six basic freedoms to citizens, subject to reasonable restrictions under Article 19(2) to 19(6) on grounds of state security, public order, decency, or morality."},{id:"const_32",name:"Constitution of India",section:"Article 32",keywords:["writ","petition","supreme court","remedies","enforcement","habeas","mandamus","32"],description:"Remedies for enforcement of fundamental rights via writs in the Supreme Court.",details:"The right to move the Supreme Court by appropriate proceedings for the enforcement of fundamental rights is guaranteed. Power to issue writs of habeas corpus, mandamus, prohibition, quo warranto, and certiorari."},{id:"arbitration_8",name:"Arbitration and Conciliation Act, 1996",section:"Section 8",keywords:["arbitration","refer","agreement","dispute","court","8"],description:"Power of a judicial authority to refer parties to arbitration where an agreement exists.",details:"A judicial authority before which an action is brought in a matter which is the subject of an arbitration agreement shall refer the parties to arbitration if a party applies not later than the date of submitting his first statement."},{id:"arbitration_9",name:"Arbitration and Conciliation Act, 1996",section:"Section 9",keywords:["interim","measures","protection","injunction","arbitration","9"],description:"Interim measures of protection that can be granted by the court.",details:"Allows parties to apply to a court for interim protection, including securing the amount in dispute, preservation of goods, or interim injunctions, before or during arbitral proceedings."},{id:"arbitration_11",name:"Arbitration and Conciliation Act, 1996",section:"Section 11",keywords:["appointment","arbitrator","court","11","tribunal","failure"],description:"Appointment of arbitrators by judicial intervention upon failure of party agreement.",details:"Provides that if parties fail to agree on an arbitrator or if the appointed arbitrators fail to agree on the presiding arbitrator, the appointment shall be made by the Supreme Court or High Court."},{id:"arbitration_34",name:"Arbitration and Conciliation Act, 1996",section:"Section 34",keywords:["set aside","award","challenge","public policy","arbitral","illegality","34"],description:"Application for setting aside an arbitral award under narrow grounds.",details:"An arbitral award may be set aside by a court only if it conflicts with the public policy of India, is affected by fraud or corruption, or suffers from patent illegality on the face of the award."},{id:"rera_18",name:"Real Estate (Regulation and Development) Act, 2016",section:"Section 18",keywords:["rera","builder","possession","delay","refund","compensation","flat","buyer","18"],description:"Liability of builder to return amount and pay compensation upon delayed possession.",details:"If the promoter fails to complete or give possession of an apartment, plot, or building in accordance with the agreement for sale, he is liable to refund the amount received with interest and compensation."},{id:"consumer_35",name:"Consumer Protection Act, 2019",section:"Section 35",keywords:["consumer","complaint","defect","service","forum","commission","35"],description:"Manner in which complaints are filed with the District Consumer Commission.",details:"Enables consumers, recognized consumer associations, or central authority to file complaints regarding defective goods or deficient services with the District Commission."},{id:"it_43a",name:"Information Technology Act, 2000",section:"Section 43A",keywords:["data","privacy","protection","compensation","sensitive","breach","security","43a","corporate"],description:"Compensation for corporate failure to protect sensitive personal data.",details:"Imposes liability on a body corporate that is negligent in implementing reasonable security practices, causing wrongful loss or wrongful gain while handling sensitive personal data."},{id:"it_66d",name:"Information Technology Act, 2000",section:"Section 66D",keywords:["impersonation","cheating","computer","internet","phishing","66d","network"],description:"Punishment for cheating by personation using computer resources.",details:"Punishes cheating by personation through communication devices or computer resources with imprisonment up to 3 years and a fine up to 1 lakh rupees."},{id:"hm_13",name:"Hindu Marriage Act, 1955",section:"Section 13",keywords:["divorce","cruelty","desertion","adultery","marriage","dissolution","13"],description:"Statutory grounds for divorce, including cruelty and desertion.",details:"Provides grounds for dissolution of marriage by divorce. Common grounds include physical or mental cruelty, desertion for a continuous period of at least two years, adultery, and conversion."},{id:"ipc_498a",name:"Indian Penal Code, 1860",section:"Section 498A",keywords:["cruelty","husband","dowry","harassment","relative","498a","matrimonial"],description:"Criminal prosecution for subjecting a married woman to cruelty.",details:"A non-bailable offence penalizing the husband or his relatives for subjecting a woman to cruelty, particularly dowry harassment. Cruelty includes physical/mental harm driving her to suicide."}],judgments:[{id:"bhajan_lal",name:"State of Haryana v. Bhajan Lal",citation:"1992 Supp (1) SCC 335",court:"Supreme Court of India",year:"1992",keywords:["quashing","fir","482","bhajan lal","guidelines","abuse","process"],relevance:98,snippet:"Lays down seven guidelines for quashing an FIR under Section 482 of CrPC to prevent malicious prosecution.",details:"The Supreme Court held that where the allegations made in the FIR or the complaint, even if taken at face value, do not constitute any offence, the High Court may quash the FIR under Section 482 of CrPC to prevent abuse of the process of any court."},{id:"arnesh_kumar",name:"Arnesh Kumar v. State of Bihar",citation:"(2014) 8 SCC 273",court:"Supreme Court of India",year:"2014",keywords:["arrest","498a","cruelty","guidelines","police","bail","arnesh","41a"],relevance:97,snippet:"Strict guidelines against automatic arrest in cases under Section 498A IPC or offences with under 7 years imprisonment.",details:"The Supreme Court directed that police should not arrest accused persons automatically in matrimonial cruelty disputes. Instead, a notice of appearance under Section 41A of CrPC must be served, and arrest should only occur with written reasons approved by a magistrate."},{id:"sms_pharma",name:"S.M.S. Pharmaceuticals Ltd. v. Neeta Bhalla",citation:"(2005) 8 SCC 89",court:"Supreme Court of India",year:"2005",keywords:["director","liability","cheque","bounce","sms","138","141","active"],relevance:95,snippet:"Determines the threshold of director liability under Section 141 of NI Act for company cheque bounce cases.",details:"The court clarified that merely holding a designation as a director does not trigger liability under Section 141 of the NI Act. The complaint must explicitly allege their operational charge and active role in the day-to-day business of the company."},{id:"puttaswamy",name:"K.S. Puttaswamy v. Union of India",citation:"(2017) 10 SCC 1",court:"Supreme Court of India",year:"2017",keywords:["privacy","fundamental","article 21","aadhaar","puttaswamy","surveillance"],relevance:99,snippet:"Declares right to privacy as a fundamental right under Article 21 of the Constitution.",details:"A 9-judge bench declared privacy to be a constitutional core protection, intrinsic to personal liberty and individual dignity, overruling previous judgments in MP Sharma and Kharak Singh."},{id:"lalita_kumari",name:"Lalita Kumari v. Govt. of UP",citation:"(2014) 2 SCC 1",court:"Supreme Court of India",year:"2014",keywords:["fir","registration","mandatory","cognizable","lalita kumari","police"],relevance:96,snippet:"Mandatory registration of FIR under Section 154 of CrPC if information discloses a cognizable offence.",details:"Established that the police are bound to register an FIR upon receiving a complaint of a cognizable offence. A preliminary inquiry is permitted only to verify if the offense is cognizable in specific cases like medical negligence or matrimonial disputes."},{id:"dk_basu",name:"D.K. Basu v. State of West Bengal",citation:"(1997) 1 SCC 416",court:"Supreme Court of India",year:"1997",keywords:["custody","arrest","police","torture","rights","dk basu","arrest memo"],relevance:98,snippet:"Imposes strict requirements and checks on police procedures during arrest and detention to prevent custodial torture.",details:"Created a set of 11 guidelines that arrest officers must follow, including preparing an arrest memo signed by witnesses, allowing the arrestee to contact a relative, and subjecting the arrestee to periodic medical examinations."},{id:"shreya_singhal",name:"Shreya Singhal v. Union of India",citation:"(2015) 5 SCC 1",court:"Supreme Court of India",year:"2015",keywords:["66a","it act","free speech","speech","shreya singhal","expression"],relevance:95,snippet:"Strikes down Section 66A of the IT Act, 2000 as an unconstitutional restriction on free speech.",details:"The Supreme Court struck down Section 66A, which penalized sending offensive messages through communication services, holding it to be vague, overbroad, and violating Article 19(1)(a) of the Constitution."},{id:"vidya_drolia",name:"Vidya Drolia v. Durga Trading Corporation",citation:"(2021) 2 SCC 1",court:"Supreme Court of India",year:"2021",keywords:["arbitration","arbitrability","dispute","section 8","section 11","vidya drolia","rem"],relevance:94,snippet:"Establishes a four-fold test to evaluate whether disputes can be referred to arbitration under Indian law.",details:"Propounded tests for non-arbitrability (such as actions in rem, insolvency, patents, etc.) and ruled that tenant-landlord disputes under the Transfer of Property Act are arbitrable unless governed by rent control laws."},{id:"associate_builders",name:"Associate Builders v. Delhi Development Authority",citation:"(2015) 3 SCC 49",court:"Supreme Court of India",year:"2015",keywords:["arbitration","set aside","section 34","public policy","patent illegality","associate builders"],relevance:93,snippet:"Restricts judicial interference under Section 34 of the Arbitration Act, clarifying the limits of public policy violations.",details:"Reaffirmed that courts cannot re-evaluate evidence or merits under Section 34. Challenging an award under 'Public Policy' is restricted to cases of justice, morality, or patent illegality that shocks the conscience of the court."},{id:"hridaya_ranjan",name:"Hridaya Ranjan Prasad Verma v. State of Bihar",citation:"(2000) 4 SCC 168",court:"Supreme Court of India",year:"2000",keywords:["cheating","contract","breach","intent","hridaya ranjan","deception"],relevance:94,snippet:"Distinguishes between civil breach of contract and criminal cheating based on intent at the inception.",details:"To establish cheating, the complainant must prove dishonest or fraudulent intent existed at the time of making the representation. Subsequent failure to fulfill a contract is merely a breach of contract."}]};function ne(e){const t=["law","section","act","judgment","court","ipc","bns","crpc","cpc","constitution","article","breach","contract","agreement","lease","tenant","rent","cheque","138","complaint","fir","bail","arrest","arbitration","suit","damages","legal","precedent","citation","ruling","appeal","accused","prosecution","offence","crime","divorce","marriage","custody","property","matrimonial","cruelty","cheating","fraud","sc","hc","supreme court","high court","rera","builder","flat","buyer","consumer","forum","commission","negligence","it act","cyber","data","privacy","statute","penal","bailable","quash","deed","partnership","probation"],a=e.toLowerCase(),n=t.filter(i=>i.length<=3?new RegExp(`\\b${i}\\b`,"i").test(a):a.includes(i));return{is_legal:n.length>0,matched_keywords:n}}function Ne(e){const t=e.toLowerCase(),a=t.split(/\W+/).filter(c=>c.length>2),n=[],i=[];for(const c of te.acts){let m=0;const f=c.section.toLowerCase().replace("section","").trim();t.includes(f)&&f.length>0&&(m+=100),c.name.toLowerCase().split(/\W+/).forEach(h=>{h.length>2&&t.includes(h)&&(m+=20)}),c.keywords.forEach(h=>{t.includes(h)&&(m+=15)}),a.forEach(h=>{c.description.toLowerCase().includes(h)&&(m+=5),c.details.toLowerCase().includes(h)&&(m+=2)}),m>0&&n.push({...c,score:m})}for(const c of te.judgments){let m=0;c.name.toLowerCase().split(/\W+/).forEach(h=>{h.length>2&&t.includes(h)&&(m+=25)}),c.keywords.forEach(h=>{t.includes(h)&&(m+=15)}),a.forEach(h=>{c.snippet.toLowerCase().includes(h)&&(m+=5),c.details.toLowerCase().includes(h)&&(m+=2)}),m>0&&i.push({...c,score:m})}n.sort((c,m)=>m.score-c.score),i.sort((c,m)=>m.score-c.score);const s=n.slice(0,3).map(({score:c,...m})=>m),r=i.slice(0,3).map(({score:c,...m})=>m),o=r.map(c=>({year:c.year,event:`${c.name} (${c.citation}): ${c.snippet}`})).sort((c,m)=>parseInt(c.year)-parseInt(m.year)),d=[],l=[];return r.forEach((c,m)=>{d.push({id:c.id,label:`${c.name} (${c.year})`,type:"supreme_court"}),m>0&&l.push({source:r[m-1].id,target:c.id,type:"cites"})}),{sources_found:s.length>0||r.length>0,acts:s,judgments:r,timeline:o,graph:{nodes:d,links:l}}}const ze="https://generativelanguage.googleapis.com/v1beta/models",Me="gemini-2.0-flash";function K(){return p.get("gemini_api_key","")}function S(){return!!K()}async function C(e,t=""){var d,l,c,m,f,$,h,Q;const a=K();if(!a)throw new Error("API_KEY_MISSING");const n=`${ze}/${Me}:generateContent?key=${a}`,i={contents:[{parts:[{text:e}]}],generationConfig:{temperature:.7,topP:.95,maxOutputTokens:8192,responseMimeType:"application/json"}};t&&(i.systemInstruction={parts:[{text:t}]});const s=await fetch(n,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(i)});if(!s.ok){const I=await s.json().catch(()=>({}));throw s.status===400&&((l=(d=I==null?void 0:I.error)==null?void 0:d.message)!=null&&l.includes("API key"))?new Error("API_KEY_INVALID"):new Error(((c=I==null?void 0:I.error)==null?void 0:c.message)||`Gemini API error: ${s.status}`)}const r=await s.json(),o=(Q=(h=($=(f=(m=r==null?void 0:r.candidates)==null?void 0:m[0])==null?void 0:f.content)==null?void 0:$.parts)==null?void 0:h[0])==null?void 0:Q.text;if(!o)throw new Error("Empty response from Gemini");try{return JSON.parse(o)}catch{const I=o.match(/```(?:json)?\s*([\s\S]*?)```/);return I?JSON.parse(I[1].trim()):{raw:o}}}const Be=`Analyze the user's input. Identify if this query is asking for Indian legal advice, statutory codes, sections, court judgments, precedents, or other legal information.
+Respond in this EXACT JSON format:
 {
+  "is_legal": true
+}`,ae=`You are NyayaGPT, an expert Indian legal research assistant. You search court records and acts to ground your answers.
+If no relevant Indian statutes or judgments are found, set "sources_found" to false.
+
+Respond in this EXACT JSON format:
+{
+  "sources_found": true,
   "acts": [
     { "name": "Act Name", "section": "Section Number", "description": "Brief explanation of relevance" }
   ],
   "judgments": [
-    { "name": "Case Name v. Other Party", "citation": "(Year) Volume SCC/AIR Page", "court": "Supreme Court / High Court Name", "year": "Year", "relevance": 85, "snippet": "Key excerpt or ratio decidendi" }
+    { "name": "Case Name v. Other Party", "citation": "(Year) Volume SCC/AIR Page", "court": "Supreme Court / High Court Name", "year": "Year", "relevance": 95, "snippet": "Key excerpt or ratio" }
   ],
-  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above. Use proper legal language.",
+  "reasoning_summary": "Brief summary of AI's search and analytical logic (1-2 sentences)",
+  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above.",
   "confidence_score": 95,
   "timeline": [
     { "year": "Year", "event": "Precedent established or statutory change" }
@@ -460,18 +467,12 @@ When given a legal query, respond in this EXACT JSON format:
     "Suggested question 1",
     "Suggested question 2"
   ]
-}
-
-Rules:
-- Always provide 2-5 relevant Acts/Sections
-- Always provide 2-4 relevant judgments with proper citations
-- Relevance score is 0-100
-- Analysis should be comprehensive, citing specific sections and cases
-- Focus on Indian law only
-- Include landmark/leading cases where applicable`,Re=`You are NyayaGPT, a senior legal researcher in India. Perform a deep multi-step legal analysis and return a comprehensive legal memorandum.
+}`,ie=`You are NyayaGPT, a senior legal researcher in India. Perform a deep multi-step legal analysis and return a comprehensive legal memorandum.
+If no relevant Indian statutes or judgments are found, set "sources_found" to false.
 
 Respond in this EXACT JSON format:
 {
+  "sources_found": true,
   "issue_summary": "Summary of the legal issue(s)",
   "applicable_laws": [
     { "act": "Act Name", "section": "Section Code", "description": "Relevance" }
@@ -479,17 +480,36 @@ Respond in this EXACT JSON format:
   "judgments": [
     { "name": "Case Name", "citation": "Citation", "court": "Court", "year": "Year", "strength": 90, "snippet": "Ratio/summary" }
   ],
+  "reasoning_summary": "Brief summary of AI's search and analytical logic (1-2 sentences)",
   "arguments_for": ["Argument 1", "Argument 2"],
   "arguments_against": ["Argument 1", "Argument 2"],
   "potential_risks": ["Risk 1", "Risk 2"],
+  "analysis": "Detailed legal analysis of the memorandum.",
   "conclusion": "Final detailed research memo conclusion",
-  "confidence_score": 95
-}`,Ne=`You are a helpful AI assistant. Answer the user's question clearly. Return the answer in this JSON format:
+  "confidence_score": 95,
+  "timeline": [
+    { "year": "Year", "event": "Precedent established or statutory change" }
+  ],
+  "related_cases": [
+    { "name": "Case Name", "citation": "Citation", "court": "Court" }
+  ],
+  "follow_ups": [
+    "Suggested question 1",
+    "Suggested question 2"
+  ]
+}`,je=`You are a helpful AI assistant. Answer the user's question clearly. Return the answer in this JSON format:
 {
   "answer": "Your detailed answer here"
-}`;async function Me(e,t="legal"){return t==="deep"?C(`Perform a deep multi-step legal research memo for: "${e}"`,Re):t==="general"?C(`Answer this question: "${e}"`,Ne):C(`Legal research query: "${e}"
+}`;async function qe(e,t="legal"){const a=K();try{const n=await fetch("/api/research",{method:"POST",headers:{"Content-Type":"application/json",Authorization:a?`Bearer ${a}`:""},body:JSON.stringify({query:e,mode:t})});if(n.ok)return await n.json();const i=await n.json().catch(()=>({}));console.warn("[AI Service] Backend API returned error, running client RAG fallback:",i.error)}catch(n){console.warn("[AI Service] Backend API unreachable, running client RAG fallback:",n.message)}return Ge(e,t,a)}async function Ge(e,t,a){let n=!1;if(a)try{n=!!(await C(`Analyze user query: "${e}"`,Be)).is_legal}catch{n=ne(e).is_legal}else n=ne(e).is_legal;if(n){const i=Ne(e);if(a){const s=JSON.stringify(i);if(i.sources_found){const r=t==="deep"?ie:ae,o=`User Query: "${e}"
 
-Provide a comprehensive legal research response with relevant Indian Acts, Sections, judgments, and analysis.`,De)}const ze=`You are NyayaGPT, an expert Indian legal judgment summarizer. Given the text of a court judgment, provide a structured summary.
+Retrieved Legal Context:
+${s}
+
+Based on the retrieved acts and judgments, generate the legal answer/memorandum. Strictly align with the required JSON structure.`,d=await C(o,r);return{is_legal:!0,query:e,sources_found:!0,...d,graph:i.graph}}else{const r=t==="deep"?ie:ae,o=`User Query: "${e}"
+
+Note: No specific matches were found in the local legal database. Perform general legal reasoning to analyze and answer the query. Set "sources_found" to false in your JSON.`,d=await C(o,r);return{is_legal:!0,query:e,sources_found:!1,...d}}}else return Ke(e,t,i)}else if(a){const i=await C(`Answer general query: "${e}"`,je);return{is_legal:!1,query:e,answer:i.answer}}else{const i=`General Assistant (Demo Mode): You asked: "${e}".
+
+This query is classified as a general (non-legal) prompt. To get full generative answers, please connect your Gemini API Key in the Settings panel.`;return{is_legal:!1,query:e,answer:i}}}const Fe=`You are NyayaGPT, an expert Indian legal judgment summarizer. Given the text of a court judgment, provide a structured summary.
 
 Respond in this EXACT JSON format:
 {
@@ -511,13 +531,13 @@ Rules:
 - Summarize arguments of both sides fairly
 - Capture the ratio decidendi in the reasoning
 - Verdict should be concise but complete
-- Key takeaways should be practical and actionable`;async function Be(e){const t=e.slice(0,3e4);return C(`Summarize the following Indian court judgment:
+- Key takeaways should be practical and actionable`;async function Oe(e){const t=e.slice(0,3e4);return C(`Summarize the following Indian court judgment:
 
 ---
 ${t}
 ---
 
-Provide a structured summary.`,ze)}const K={legal_notice:{name:"Legal Notice",systemPrompt:`You are NyayaGPT, an expert Indian legal draft generator. Generate a formal Legal Notice as per Indian law.
+Provide a structured summary.`,Fe)}const V={legal_notice:{name:"Legal Notice",systemPrompt:`You are NyayaGPT, an expert Indian legal draft generator. Generate a formal Legal Notice as per Indian law.
 
 Respond in this EXACT JSON format:
 {
@@ -559,12 +579,12 @@ Respond in this EXACT JSON format:
   "title": "RENT AGREEMENT",
   "content": "Full rent agreement with all clauses including property details, rent, security deposit, duration, maintenance, subletting, termination, and registration details.",
   "sections": ["Property", "Rent & Deposit", "Duration", "Maintenance", "Terms", "Termination", "General"]
-}`,fields:[{name:"landlord_name",label:"Landlord Name",type:"text",required:!0},{name:"tenant_name",label:"Tenant Name",type:"text",required:!0},{name:"property_address",label:"Property Address",type:"textarea",required:!0},{name:"rent_amount",label:"Monthly Rent (₹)",type:"text",required:!0},{name:"security_deposit",label:"Security Deposit (₹)",type:"text",required:!0},{name:"duration_months",label:"Lease Duration (months)",type:"number",required:!0},{name:"start_date",label:"Start Date",type:"date",required:!0},{name:"purpose",label:"Purpose (Residential/Commercial)",type:"text",required:!0}]}};function oe(){return Object.entries(K).map(([e,t])=>({id:e,name:t.name,fields:t.fields}))}function le(e){var t;return((t=K[e])==null?void 0:t.fields)||[]}async function je(e,t){const a=K[e];if(!a)throw new Error("Invalid template");const n=Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
+}`,fields:[{name:"landlord_name",label:"Landlord Name",type:"text",required:!0},{name:"tenant_name",label:"Tenant Name",type:"text",required:!0},{name:"property_address",label:"Property Address",type:"textarea",required:!0},{name:"rent_amount",label:"Monthly Rent (₹)",type:"text",required:!0},{name:"security_deposit",label:"Security Deposit (₹)",type:"text",required:!0},{name:"duration_months",label:"Lease Duration (months)",type:"number",required:!0},{name:"start_date",label:"Start Date",type:"date",required:!0},{name:"purpose",label:"Purpose (Residential/Commercial)",type:"text",required:!0}]}};function pe(){return Object.entries(V).map(([e,t])=>({id:e,name:t.name,fields:t.fields}))}function ue(e){var t;return((t=V[e])==null?void 0:t.fields)||[]}async function He(e,t){const a=V[e];if(!a)throw new Error("Invalid template");const n=Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
 `);return C(`Generate a professional Indian legal document with these details:
 
 ${n}
 
-Create a complete, ready-to-use document.`,a.systemPrompt)}const qe=`You are NyayaGPT, an expert Indian legal case analyzer. Given a legal document (petition, FIR, agreement, or legal notice), provide a comprehensive analysis.
+Create a complete, ready-to-use document.`,a.systemPrompt)}const Ue=`You are NyayaGPT, an expert Indian legal case analyzer. Given a legal document (petition, FIR, agreement, or legal notice), provide a comprehensive analysis.
 
 Respond in this EXACT JSON format:
 {
@@ -591,13 +611,13 @@ Rules:
 - Identify 2-4 missing clauses or provisions
 - Identify 2-4 legal issues
 - Risk score is 0-100 (0 = no risk, 100 = extreme risk)
-- Be specific to Indian law`;async function Ge(e,t){const a=e.slice(0,3e4);return C(`Analyze the following ${t} under Indian law:
+- Be specific to Indian law`;async function We(e,t){const a=e.slice(0,3e4);return C(`Analyze the following ${t} under Indian law:
 
 ---
 ${a}
 ---
 
-Provide a comprehensive analysis.`,qe)}const Fe=`You are NyayaGPT, an expert Indian legal citation researcher. Given a legal issue, statute, or precedent, return a structured list of relevant judgments, cited precedents, court hierarchies, and citation connections (graph).
+Provide a comprehensive analysis.`,Ue)}const Je=`You are NyayaGPT, an expert Indian legal citation researcher. Given a legal issue, statute, or precedent, return a structured list of relevant judgments, cited precedents, court hierarchies, and citation connections (graph).
 
 Respond in this EXACT JSON format:
 {
@@ -629,11 +649,23 @@ Rules:
 - Provide 3-6 highly relevant citations
 - Cite exact court levels (e.g. Supreme Court of India, Delhi High Court)
 - Citation strength should be "High", "Medium", or "Low" based on frequency of referral
-- Graph links represent citation connections between the cases in the nodes list`;async function He(e){return C(`Find legal citations and build a connection graph for the following query/issue: "${e}"`,Fe)}function Oe(){return{issue_summary:"Criminal liability of a non-executive independent director in cheque bounce cases under Section 138 of the Negotiable Instruments Act, 1881.",applicable_laws:[{act:"Negotiable Instruments Act, 1881",section:"Section 138",description:"Dishonour of cheque for insufficiency, etc., of funds in the account."},{act:"Negotiable Instruments Act, 1881",section:"Section 141",description:"Offences by companies and liability of directors/officers in charge of daily affairs."},{act:"Companies Act, 2013",section:"Section 149(12)",description:"Limitation of liability of independent and non-executive directors."}],judgments:[{name:"S.M.S. Pharmaceuticals Ltd. v. Neeta Bhalla",citation:"(2005) 8 SCC 89",court:"Supreme Court of India",year:"2005",strength:98,snippet:"Established that a clear statement must be made in the complaint showing the director was in charge of and responsible for the company's daily conduct."},{name:"Pooja Ravinder Devidasani v. State of Maharashtra",citation:"AIR 2015 SC 675",court:"Supreme Court of India",year:"2014",strength:95,snippet:"Held that non-executive directors cannot be held liable under Section 138 merely by virtue of holding a designation, without specific overt acts showing operational control."},{name:"KK Ahuja v. V.K. Vora",citation:"(2009) 10 SCC 48",court:"Supreme Court of India",year:"2009",strength:89,snippet:"Clarified the roles of Managing Directors, Directors, and Officers, reiterating that only those participating in everyday commercial actions are criminally liable."}],arguments_for:["The director is designated as a non-executive/independent director and does not draw operational salary.","The Board resolution files prove the director has no signing authority on the bank accounts of the company.","No specific averment is present in the complaint detailing the active involvement of the director in issuing the check."],arguments_against:["The complainant argues that all directors are collectively liable for company debts under statutory guidelines.","The name of the director appears on the official company letterhead as an active advisor."],potential_risks:["Initial summon proceedings might still require the director to appear and file for quashing under Section 482 CrPC.","Vaguely worded complaint drafts might delay discharge if operational participation is deemed an issue of trial evidence."],conclusion:"Under Indian jurisprudence, specifically Section 141 of the NI Act and Section 149(12) of the Companies Act, a non-executive independent director cannot be held criminally liable for cheque bounce offences unless there is a clear, specific, and operational allegation showing they were in charge of the company's day-to-day affairs at the time of the offence. The landmark ruling in S.M.S. Pharmaceuticals and Pooja Ravinder Devidasani provides complete protection, allowing the director to seek quashing of summons from the High Court under Section 482 of the CrPC/BNS.",confidence_score:95}}function Ue(){return{answer:"To run a background task in a Node.js server, you can use built-in mechanisms like child processes or worker threads for CPU-heavy tasks. For robust, production-grade applications, it is highly recommended to use message queues like BullMQ (redis-backed), Agenda (mongodb-backed), or Celery (if working in a python stack). These allow you to schedule, monitor, and scale background processing nodes independently from your main HTTP router nodes."}}function We(){return{acts:[{name:"Indian Penal Code, 1860",section:"Section 498A",description:"Husband or relative of husband of a woman subjecting her to cruelty — Punishment with imprisonment up to 3 years and fine."},{name:"Hindu Marriage Act, 1955",section:"Section 13",description:"Grounds for divorce including cruelty, desertion, conversion, unsoundness of mind, venereal disease, renunciation, and presumption of death."},{name:"Protection of Women from Domestic Violence Act, 2005",section:"Section 3",description:"Defines domestic violence including physical, sexual, verbal, emotional, and economic abuse."}],judgments:[{name:"Arnesh Kumar v. State of Bihar",citation:"(2014) 8 SCC 273",court:"Supreme Court of India",year:"2014",relevance:95,snippet:"The Supreme Court laid down guidelines to prevent automatic arrests in cases under Section 498A IPC, requiring the police to follow a checklist before making arrests."},{name:"Rajesh Sharma v. State of U.P.",citation:"(2017) 10 SCC 257",court:"Supreme Court of India",year:"2017",relevance:88,snippet:"Directed establishment of Family Welfare Committees in every district to look into complaints of matrimonial disputes and recommend settlement."},{name:"Shobha Rani v. Madhukar Reddi",citation:"(1988) 1 SCC 105",court:"Supreme Court of India",year:"1988",relevance:78,snippet:"Defined cruelty broadly to include both physical and mental cruelty, establishing that persistent demands for dowry constitute cruelty under Section 498A."}],analysis:`Based on the legal research, Section 498A of the Indian Penal Code is the primary provision dealing with cruelty by husband or his relatives against a married woman. This section was introduced by the Criminal Law (Second Amendment) Act, 1983, to combat the increasing menace of dowry deaths and domestic violence.
+- Graph links represent citation connections between the cases in the nodes list`;async function Ye(e){return C(`Find legal citations and build a connection graph for the following query/issue: "${e}"`,Je)}function Ke(e,t,a){const n=e.split(/\s+/).filter(l=>l.length>3).slice(0,5).join(" "),i=n?`"${n}"`:"your request";if(!a.sources_found)return{is_legal:!0,query:e,sources_found:!1,reasoning_summary:`Scanned statutory databases for ${i}, but found no direct references.`,analysis:`We did not locate specific statutory sections or judgments directly matching: "${e}".
 
-The Supreme Court in Arnesh Kumar v. State of Bihar (2014) 8 SCC 273 recognized the potential misuse of Section 498A and laid down important safeguards, including a mandatory checklist for police officers before arrest. This judgment was a landmark in balancing the protection of women with prevention of misuse.
+General legal reasoning indicates that this issue is likely governed by general principles of Indian civil/criminal law. In legal practice, a matter of this nature would require checking procedural details and state-specific amendments.
 
-In addition to criminal remedies under Section 498A IPC, the Protection of Women from Domestic Violence Act, 2005 provides civil remedies including protection orders, residence orders, monetary relief, and custody orders. Section 13 of the Hindu Marriage Act, 1955 allows divorce on grounds of cruelty, providing a matrimonial remedy alongside criminal provisions.`,confidence_score:92,timeline:[{year:"1983",event:"Section 498A added to IPC by Criminal Law Amendment Act."},{year:"1988",event:"Supreme Court defines physical and mental cruelty in Shobha Rani case."},{year:"2005",event:"Protection of Women from Domestic Violence Act enacted."},{year:"2014",event:"Arnesh Kumar guidelines issued to prevent automatic arrests."}],related_cases:[{name:"Preeti Gupta v. State of Jharkhand",citation:"(2010) 7 SCC 667",court:"Supreme Court of India"},{name:"Sushil Kumar Sharma v. Union of India",citation:"(2005) 6 SCC 281",court:"Supreme Court of India"}],follow_ups:["What are the guidelines for registering FIR in matrimonial disputes?","How to apply for anticipatory bail in a Section 498A case?","Are there amendments proposed for BNS regarding domestic violence?"]}}function Ye(){return{title:"Arnesh Kumar v. State of Bihar",court:"Supreme Court of India",date:"2 July 2014",facts:["The appellant was arrested under Section 498A IPC without proper investigation","The case highlighted the growing concern of mechanical arrests in matrimonial disputes","Police had arrested the accused without following proper procedure or assessing necessity of arrest"],issues:["Whether automatic arrest under Section 498A IPC is mandatory","What safeguards should be in place to prevent misuse of Section 498A","Whether the Magistrate should apply judicial mind before authorizing detention"],petitioner_arguments:["Section 498A is being widely misused as a tool for harassment","Automatic arrests violate fundamental rights under Article 21","Police should be required to investigate before making arrests"],respondent_arguments:["Section 498A is necessary to protect women from domestic violence","Arrests are needed to prevent accused from influencing witnesses","The provision serves an important social purpose"],court_reasoning:"The Supreme Court acknowledged that while Section 498A serves a vital purpose in protecting women from cruelty, its misuse cannot be ignored. The Court noted that in many cases, arrests were made mechanically without proper application of mind. The Court held that police officers must satisfy themselves about the necessity of arrest under Section 41 CrPC and prepare a checklist of reasons for arrest.",verdict:"The Supreme Court directed all State Governments to instruct police officers not to automatically arrest the accused in Section 498A cases. Police must follow the checklist under Section 41(1)(b)(ii) CrPC. Magistrates must not authorize detention casually and must satisfy themselves that the arrest is warranted.",key_takeaways:["Police cannot make automatic arrests in Section 498A cases","A checklist must be prepared justifying the arrest","Magistrates must apply judicial mind before authorizing detention","Non-compliance may lead to departmental action against police officers","This judgment balances protection of women with prevention of misuse"]}}function Je(){return{document_type:"Service Agreement",key_facts:["Agreement between two parties for software development services","Contract value of ₹15,00,000 with milestone-based payments","Project duration of 6 months from execution date","No specific mention of data protection or privacy terms","Intellectual property assignment clause is vaguely worded"],risks:[{level:"high",title:"Vague IP Assignment",description:"The intellectual property clause does not clearly specify ownership of derivative works and pre-existing IP. This could lead to disputes."},{level:"high",title:"No Data Protection Terms",description:"Given DPDP Act 2023 requirements, the absence of data protection clauses is a significant compliance risk."},{level:"medium",title:"Limited Liability Cap Missing",description:"No cap on liability has been specified, exposing both parties to unlimited claims."},{level:"medium",title:"Inadequate Termination Clause",description:"Termination clause does not address payments for partially completed work or transition assistance."},{level:"low",title:"No Force Majeure",description:"Agreement does not include force majeure provisions for unforeseen circumstances."}],missing_clauses:[{clause:"Force Majeure",importance:"Essential for protecting both parties from liability during unforeseen events like natural disasters or pandemics."},{clause:"Data Protection & Privacy",importance:"Required under the Digital Personal Data Protection Act, 2023 for any agreement involving personal data processing."},{clause:"Non-Solicitation",importance:"Prevents parties from poaching each other's employees during and after the engagement."},{clause:"Limitation of Liability",importance:"Caps maximum liability to contract value, preventing disproportionate claims."}],legal_issues:[{issue:"Stamp Duty Compliance",explanation:"The agreement may require stamp duty as per the applicable state Stamp Act. Non-stamped agreements may not be admissible as evidence."},{issue:"GST Implications",explanation:"The payment terms do not address GST obligations. Under GST law, the service provider must charge 18% GST on services."},{issue:"Dispute Resolution Mechanism",explanation:"While arbitration is mentioned, the clause does not specify the seat of arbitration, language, or applicable arbitration rules."}],overall_risk_score:68,recommendation:"The agreement requires significant revision before execution. The most critical issues are the vague IP assignment clause and the complete absence of data protection terms (mandatory under DPDP Act 2023). We recommend adding Force Majeure, limitation of liability, data protection, and non-solicitation clauses. The arbitration clause should specify seat, language, and governing rules. GST and stamp duty compliance should be addressed explicitly."}}function Ke(){return{judgments:[{name:"S.P. Gupta v. President of India",citation:"AIR 1982 SC 149",court:"Supreme Court of India",year:"1981",citation_count:245,citation_strength:"High",hierarchy_level:"Supreme Court",relevance_score:98,snippet:"A landmark judgment establishing the concept of Public Interest Litigation (PIL) in India, holding that any member of the public can approach the court for public injury."},{name:"Bandhua Mukti Morcha v. Union of India",citation:"(1984) 3 SCC 161",court:"Supreme Court of India",year:"1984",citation_count:189,citation_strength:"High",hierarchy_level:"Supreme Court",relevance_score:92,snippet:"Reinforced PIL admissibility and held that the Court can appoint commissioners to locate bonded laborers and report back, bypassing rigid adversarial procedures."},{name:"Sheela Barse v. State of Maharashtra",citation:"(1983) 2 SCC 96",court:"Supreme Court of India",year:"1983",citation_count:78,citation_strength:"Medium",hierarchy_level:"Supreme Court",relevance_score:85,snippet:"Addressed rights of women prisoners, establishing that legal aid is a fundamental right under Article 21 and laying down guidelines for custodial treatment."}],graph:{nodes:[{id:"sp_gupta",label:"S.P. Gupta v. President of India (1981)",type:"supreme_court"},{id:"bandhua",label:"Bandhua Mukti Morcha v. UOI (1984)",type:"supreme_court"},{id:"sheela",label:"Sheela Barse v. State of Maha (1983)",type:"supreme_court"}],links:[{source:"bandhua",target:"sp_gupta",type:"cited_by"},{source:"sheela",target:"sp_gupta",type:"cited_by"}]}}}const Ve=["What are the ingredients of cheating under BNS?","Latest Supreme Court judgments on privacy?","Important precedents on arbitration?","Remedies for breach of contract under Indian law"];let b="legal",Xe=null;function Qe(){const e=l.getResearchHistory();return`
+[DEMO MODE] Connect your Gemini API key in Settings to search the live indexes.`,confidence_score:45,timeline:[],related_cases:[],follow_ups:["How does Indian contract law apply generally here?","Specify another act or section to narrow down search."]};const s=a.acts,r=a.judgments,o=s[0]||{name:"Indian Statutes",section:"applicable rules"},d=r[0]||{name:"landmark precedents",citation:""};return t==="deep"?{is_legal:!0,query:e,sources_found:!0,issue_summary:`Legal issue regarding ${i} under the provisions of ${o.name}.`,applicable_laws:s.map(l=>({act:l.name,section:l.section,description:l.description})),judgments:r.map(l=>({name:l.name,citation:l.citation,court:l.court,year:l.year,strength:90,snippet:l.snippet})),reasoning_summary:`Identified key statutes: ${s.map(l=>l.section).join(", ")}. Analyzed precedent in ${d.name}.`,arguments_for:[`Compliance with the express wording of ${o.section} protects the applicant's rights.`,`The ratio decidendi in ${d.name} supports a favorable interpretation of this dispute.`],arguments_against:["Opposing counsel might argue lack of strict procedural adherence.",`Factual distinctions could limit the direct binding value of ${d.name}.`],potential_risks:["Risk of civil litigation delays under Section 73 Contract Act.","Evidence collection burden to establish intention/consent."],analysis:`A detailed analysis of ${i} under Indian jurisprudence reveals strong grounding under ${o.name}, ${o.section}.
+
+According to ${o.section}: "${o.description}". This provision establishes the legal framework governing the transaction.
+
+Furthermore, the Supreme Court of India in ${d.name} (${d.citation}) held that: "${d.snippet}". This precedent binds subordinate courts and outlines the criteria that must be satisfied to establish liability or seek relief.
+
+[DEMO MODE] This memorandum has been dynamically generated from offline indexes. To generate professional, comprehensive summaries via LLM, please configure your Gemini API Key in settings.`,conclusion:`Based on the statutory rules of ${o.section} and precedents like ${d.name}, there is a viable case here, provided proper notices have been served.`,confidence_score:85,timeline:a.timeline,related_cases:r.slice(1).map(l=>({name:l.name,citation:l.citation,court:l.court})),follow_ups:[`What are the specific filings required under ${o.name}?`,`How does the ruling in ${d.name} apply to corporate bodies?`],graph:a.graph}:{is_legal:!0,query:e,sources_found:!0,acts:s.map(l=>({name:l.name,section:l.section,description:l.description})),judgments:r.map(l=>({name:l.name,citation:l.citation,court:l.court,year:l.year,relevance:l.relevance,snippet:l.snippet})),reasoning_summary:`Found statutory grounding in ${o.name} (${o.section}) and judicial authorities including ${d.name}.`,analysis:`In relation to your query on ${i}, the primary statutory provision is ${o.section} of the ${o.name}, which states that ${o.description}.
+
+This is reinforced by judicial precedents. Specifically, in ${d.name} (${d.citation}), the ${d.court} established that ${d.snippet}.
+
+If you are drafting pleadings or advising a client, ensure that all the key ingredients of ${o.section} are documented. For example, if there is a claim under Section 138 of the NI Act, verify the 30-day notice timeline.
+
+[DEMO MODE] Dynamically retrieved from local knowledge indexes. Configure your Gemini API Key in Settings to enable real-time web-connected legal analysis.`,confidence_score:80,timeline:a.timeline,related_cases:r.slice(1).map(l=>({name:l.name,citation:l.citation,court:l.court})),follow_ups:[`What is the limitation period under ${o.name}?`,`How to draft a legal notice citing ${d.name}?`],graph:a.graph}}function Ve(){return{document_type:"Service Agreement",key_facts:["Agreement between two parties for software development services","Contract value of ₹15,00,000 with milestone-based payments"],risks:[{level:"high",title:"Vague IP Assignment",description:"IP clauses are vague."}],missing_clauses:[{clause:"Force Majeure",importance:"Protects from pandemic disruptions."}],legal_issues:[{issue:"Stamp Duty Compliance",explanation:"Needs appropriate state stamps."}],overall_risk_score:68,recommendation:"The agreement requires revisions regarding IP and data protection clauses."}}function Qe(){return{judgments:[{name:"S.P. Gupta v. President of India",citation:"AIR 1982 SC 149",court:"Supreme Court of India",year:"1981",citation_count:245,citation_strength:"High",hierarchy_level:"Supreme Court",relevance_score:98,snippet:"A landmark judgment establishing the concept of Public Interest Litigation (PIL) in India."}],graph:{nodes:[{id:"sp_gupta",label:"S.P. Gupta v. President of India (1981)",type:"supreme_court"}],links:[]}}}function Xe(){return{title:"Arnesh Kumar v. State of Bihar",court:"Supreme Court of India",date:"July 2, 2014",facts:["The appellant (husband) filed a petition seeking anticipatory bail in a case registered under Section 498A IPC and Section 4 of the Dowry Prohibition Act.","The wife alleged that the husband and his family harassed and demanded dowry of Rs. 8 lakhs, a Maruti car, and other items.","The High Court of Patna rejected the anticipatory bail application of the husband, which led to this appeal in the Supreme Court."],issues:["Whether the power of arrest is exercised routinely and arbitrarily by police officers under Section 498A IPC.","What guidelines and safeguards should be implemented to prevent arbitrary arrests in offences carrying less than 7 years imprisonment."],petitioner_arguments:["The allegations of cruelty and dowry harassment are completely baseless and fabricated.","The arrest under Section 498A IPC is used as a tool of harassment and blackmail, leading to immediate custodial detention of family members without any preliminary inquiry."],respondent_arguments:["Matrimonial cruelty is a grave social evil, and immediate arrest is required to prevent destruction of evidence and protect the victim.","The police acted in accordance with the law to investigate cognizable offences based on a written complaint by the wife."],court_reasoning:"The Supreme Court noted that Section 498A was introduced to protect women but has been widely abused as a weapon by disgruntled wives. Arrest brings humiliation, castigates the person and his family forever. The Court held that the power to arrest is one thing, but the justification for the exercise of it is quite another. Section 41 of CrPC sets out restrictions and conditions on when a police officer may arrest without a warrant. The police must satisfy themselves that the arrest is necessary to prevent further offences, ensure proper investigation, or prevent tampering of evidence.",verdict:"The Supreme Court allowed the appeal, granted anticipatory bail to the appellant, and laid down mandatory guidelines to be followed by the police and magistrates in all arrests for offences carrying less than 7 years imprisonment, making non-compliance punishable by disciplinary and contempt action.",key_takeaways:["Police officers cannot arrest an accused automatically under Section 498A IPC without satisfying the conditions under Section 41 CrPC.","A notice of appearance under Section 41A CrPC must be served on the accused within 2 weeks of registering the FIR.","Magistrates must verify the reasons for arrest and satisfy themselves before authorizing detention of the accused."]}}const Ze=["What are the ingredients of cheating under BNS?","Latest Supreme Court judgments on privacy?","Important precedents on arbitration?","Remedies for breach of contract under Indian law"];let w="legal";function et(){const e=p.getResearchHistory();return`
     <div class="page-content animate-fade-up" style="height: calc(100vh - 100px); display: flex; flex-direction: column; padding: 20px 24px; overflow: hidden;">
       
       <!-- Layout Wrapper -->
@@ -648,13 +680,13 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           <div>
             <h5 style="font-size: 0.8125rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; font-family: var(--font-headline);">Search Mode</h5>
             <div style="display: flex; flex-direction: column; gap: 6px;">
-              <button class="btn mode-selector-btn ${b==="legal"?"active":"btn-ghost"}" data-mode="legal" style="justify-content: flex-start; text-align: left; padding: 8px 12px; font-size: 0.8125rem; width: 100%;">
+              <button class="btn mode-selector-btn ${w==="legal"?"active":"btn-ghost"}" data-mode="legal" style="justify-content: flex-start; text-align: left; padding: 8px 12px; font-size: 0.8125rem; width: 100%;">
                 🔍 Legal Research
               </button>
-              <button class="btn mode-selector-btn ${b==="deep"?"active":"btn-ghost"}" data-mode="deep" style="justify-content: flex-start; text-align: left; padding: 8px 12px; font-size: 0.8125rem; width: 100%;">
+              <button class="btn mode-selector-btn ${w==="deep"?"active":"btn-ghost"}" data-mode="deep" style="justify-content: flex-start; text-align: left; padding: 8px 12px; font-size: 0.8125rem; width: 100%;">
                 🧠 Deep Analysis
               </button>
-              <button class="btn mode-selector-btn ${b==="general"?"active":"btn-ghost"}" data-mode="general" style="justify-content: flex-start; text-align: left; padding: 8px 12px; font-size: 0.8125rem; width: 100%;">
+              <button class="btn mode-selector-btn ${w==="general"?"active":"btn-ghost"}" data-mode="general" style="justify-content: flex-start; text-align: left; padding: 8px 12px; font-size: 0.8125rem; width: 100%;">
                 🤖 General AI
               </button>
             </div>
@@ -666,8 +698,8 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
               ${e.length===0?`
                 <div style="font-size: 0.75rem; color: var(--text-tertiary); text-align: center; padding: 20px 0;">No queries recorded.</div>
               `:e.slice(0,10).map(t=>`
-                <div class="card card-interactive recent-query-item" data-query-text="${u(t.query)}" style="padding: 10px; margin: 0; font-size: 0.75rem; border: 1px solid rgba(0,0,0,0.03);">
-                  <div style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: var(--text-primary);">${u(t.query)}</div>
+                <div class="card card-interactive recent-query-item" data-query-text="${g(t.query)}" style="padding: 10px; margin: 0; font-size: 0.75rem; border: 1px solid rgba(0,0,0,0.03);">
+                  <div style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: var(--text-primary);">${g(t.query)}</div>
                   <div style="font-size: 0.625rem; color: var(--text-tertiary); margin-top: 2px;">${t.actsCount||0} acts · ${t.judgmentsCount||0} judgments</div>
                 </div>
               `).join("")}
@@ -682,11 +714,11 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
             <div>
               <span id="canvas-mode-badge" class="badge badge-primary" style="text-transform: uppercase; font-weight: 600; font-size: 0.6875rem; font-family: var(--font-headline);">
-                ${b==="legal"?"Legal Research Mode":b==="deep"?"Deep Research Memo Mode":"General Assistant"}
+                ${w==="legal"?"Legal Research Mode":w==="deep"?"Deep Research Memo Mode":"General Assistant"}
               </span>
             </div>
             <div style="font-size: 0.75rem; color: var(--text-tertiary);">
-              ${w()?"🟢 API Connected":"🔌 Demo Mode"}
+              ${S()?"🟢 API Connected":"🔌 Demo Mode"}
             </div>
           </div>
 
@@ -710,7 +742,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
               </button>
             </div>
             <div class="suggested-queries" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.02); padding-top: 8px;">
-              ${Ve.map(t=>`<button class="chip text-xs" data-suggest-query="${t}" style="font-size: 0.6875rem; border: 1px solid rgba(0,0,0,0.04); cursor: pointer; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.01);">${t}</button>`).join("")}
+              ${Ze.map(t=>`<button class="chip text-xs" data-suggest-query="${t}" style="font-size: 0.6875rem; border: 1px solid rgba(0,0,0,0.04); cursor: pointer; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.01);">${t}</button>`).join("")}
             </div>
           </div>
 
@@ -729,7 +761,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
 
       </div>
     </div>
-  `}function Ze(){var a;const e=document.getElementById("research-submit-btn"),t=document.getElementById("research-query");(a=document.getElementById("new-research-btn"))==null||a.addEventListener("click",()=>{document.getElementById("canvas-stream").innerHTML=`
+  `}function tt(){var a;const e=document.getElementById("research-submit-btn"),t=document.getElementById("research-query");(a=document.getElementById("new-research-btn"))==null||a.addEventListener("click",()=>{document.getElementById("canvas-stream").innerHTML=`
       <div id="welcome-canvas" style="padding: 24px; text-align: center; margin-top: 40px; max-width: 460px; margin-left: auto; margin-right: auto;">
         <span style="font-size: 2.5rem;">⚖️</span>
         <h3 style="margin-top: 12px; font-weight: 600; color: var(--text-primary); font-family: var(--font-headline);">Search Indian Jurisprudence</h3>
@@ -737,7 +769,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           Enter search questions above. Mode switches let you toggle between statutory summaries, deep structural legal memos, and general utility AI tools.
         </p>
       </div>
-    `,document.getElementById("inspector-placeholder").style.display="flex",document.getElementById("inspector-content").style.display="none",t&&(t.value="")}),document.querySelectorAll(".mode-selector-btn").forEach(n=>{n.addEventListener("click",()=>{document.querySelectorAll(".mode-selector-btn").forEach(s=>{s.classList.remove("active"),s.classList.add("btn-ghost")}),n.classList.add("active"),n.classList.remove("btn-ghost"),b=n.dataset.mode;const i=document.getElementById("canvas-mode-badge");i&&(i.textContent=b==="legal"?"Legal Research Mode":b==="deep"?"Deep Research Memo Mode":"General Assistant")})}),document.querySelectorAll("[data-suggest-query]").forEach(n=>{n.addEventListener("click",()=>{t&&(t.value=n.dataset.suggestQuery,t.focus())})}),document.querySelectorAll(".recent-query-item").forEach(n=>{n.addEventListener("click",()=>{t&&(t.value=n.dataset.queryText,H(t,e))})}),e&&e.addEventListener("click",()=>H(t,e)),t&&t.addEventListener("keydown",n=>{n.key==="Enter"&&!n.shiftKey&&(n.preventDefault(),H(t,e))})}async function H(e,t){var i,s,r,o,m;const a=e.value.trim();if(!a){p.warning("Please input your research topic");return}const n=document.getElementById("canvas-stream");t.disabled=!0,document.getElementById("submit-btn-text").textContent="Analyzing...",b==="deep"?(n.innerHTML=et(),await tt()):n.innerHTML=`
+    `,document.getElementById("inspector-placeholder").style.display="flex",document.getElementById("inspector-content").style.display="none",t&&(t.value="")}),document.querySelectorAll(".mode-selector-btn").forEach(n=>{n.addEventListener("click",()=>{document.querySelectorAll(".mode-selector-btn").forEach(s=>{s.classList.remove("active"),s.classList.add("btn-ghost")}),n.classList.add("active"),n.classList.remove("btn-ghost"),w=n.dataset.mode;const i=document.getElementById("canvas-mode-badge");i&&(i.textContent=w==="legal"?"Legal Research Mode":w==="deep"?"Deep Research Memo Mode":"General Assistant")})}),document.querySelectorAll("[data-suggest-query]").forEach(n=>{n.addEventListener("click",()=>{t&&(t.value=n.dataset.suggestQuery,t.focus())})}),document.querySelectorAll(".recent-query-item").forEach(n=>{n.addEventListener("click",()=>{t&&(t.value=n.dataset.queryText,O(t,e))})}),e&&e.addEventListener("click",()=>O(t,e)),t&&t.addEventListener("keydown",n=>{n.key==="Enter"&&!n.shiftKey&&(n.preventDefault(),O(t,e))})}async function O(e,t){var i,s,r,o,d;const a=e.value.trim();if(!a){u.warning("Please input your research topic");return}const n=document.getElementById("canvas-stream");t.disabled=!0,document.getElementById("submit-btn-text").textContent="Analyzing...",w==="deep"?(n.innerHTML=nt(),await at()):n.innerHTML=`
       <div style="padding: 40px; text-align: center;">
         <div class="typing-indicator" style="justify-content: center; margin-bottom: 16px;">
           <div class="typing-dot"></div>
@@ -746,7 +778,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         </div>
         <p class="text-muted" style="font-size: 0.875rem;">Querying legal engine and generating output stream...</p>
       </div>
-    `;try{let d;w()?d=await Me(a,b):(await new Promise(c=>setTimeout(c,1500)),b==="deep"?d=Oe():b==="general"?d=Ue():d=We()),Xe=d,l.incrementUsage("research"),l.logActivity("research",`${b==="deep"?"Deep":"Legal"} research executed`,"🔍"),l.saveResearch({query:a,actsCount:((i=d.acts)==null?void 0:i.length)||((s=d.applicable_laws)==null?void 0:s.length)||0,judgmentsCount:((r=d.judgments)==null?void 0:r.length)||0}),n.innerHTML=nt(a,d),n.scrollTop=0,at(d),(o=document.getElementById("save-workspace-btn"))==null||o.addEventListener("click",()=>{l.saveDocument({type:"research",title:a,content:d}),p.success("Research memo successfully saved to library")}),(m=document.getElementById("export-canvas-btn"))==null||m.addEventListener("click",()=>{J(()=>Promise.resolve().then(()=>Y),void 0).then(c=>{c.downloadAsHTML(st(a,d),`Research: ${a}`,`research_${Date.now()}.html`)})})}catch(d){p.error("Legal index retrieval failed: "+d.message),n.innerHTML='<div style="padding:20px; color:var(--danger)">An error occurred during query execution.</div>'}finally{t.disabled=!1,document.getElementById("submit-btn-text").textContent="Execute"}}function et(){return`
+    `;try{const l=await qe(a,w);p.incrementUsage("research"),p.logActivity("research",`${w==="deep"?"Deep":"Legal"} research executed`,"🔍"),p.saveResearch({query:a,actsCount:((i=l.acts)==null?void 0:i.length)||((s=l.applicable_laws)==null?void 0:s.length)||0,judgmentsCount:((r=l.judgments)==null?void 0:r.length)||0}),n.innerHTML=it(a,l),n.scrollTop=0,st(l),(o=document.getElementById("save-workspace-btn"))==null||o.addEventListener("click",()=>{p.saveDocument({type:"research",title:a,content:l}),u.success("Research memo successfully saved to library")}),(d=document.getElementById("export-canvas-btn"))==null||d.addEventListener("click",()=>{Y(()=>Promise.resolve().then(()=>J),void 0).then(c=>{c.downloadAsHTML(ot(a,l),`Research: ${a}`,`research_${Date.now()}.html`)})})}catch(l){u.error("Legal index retrieval failed: "+l.message),n.innerHTML=`<div style="padding:20px; color:var(--danger)">An error occurred: ${l.message}</div>`}finally{t.disabled=!1,document.getElementById("submit-btn-text").textContent="Execute"}}function nt(){return`
     <div style="padding: 32px; max-width: 400px; margin: 40px auto 0;">
       <h4 style="margin-bottom: 20px; font-weight: 600; color: var(--text-primary); text-align: center; font-family: var(--font-headline);">Deep Research Agent Active</h4>
       <div class="processing-steps" style="display: flex; flex-direction: column; gap: 12px;">
@@ -772,14 +804,33 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         </div>
       </div>
     </div>
-  `}async function tt(){const e=["step-statutes","step-judgments","step-citations","step-compare","step-memo"];for(const t of e){const a=document.getElementById(t);if(a){a.classList.add("active");const n=a.querySelector(".processing-step-icon");n&&(n.innerHTML="🔄",n.style.background="transparent"),await new Promise(i=>setTimeout(i,600)),n&&(n.innerHTML="✅",n.style.color="var(--secondary)"),a.classList.remove("active"),a.style.opacity="0.7"}}}function nt(e,t){if(b==="general")return`
+  `}async function at(){const e=["step-statutes","step-judgments","step-citations","step-compare","step-memo"];for(const t of e){const a=document.getElementById(t);if(a){a.classList.add("active");const n=a.querySelector(".processing-step-icon");n&&(n.innerHTML="🔄",n.style.background="transparent"),await new Promise(i=>setTimeout(i,400)),n&&(n.innerHTML="✅",n.style.color="var(--secondary)"),a.classList.remove("active"),a.style.opacity="0.7"}}}function it(e,t){if(!t.is_legal)return`
       <div style="font-size: 0.875rem; line-height: 1.6; color: var(--text-primary);">
-        <h4 style="font-weight: 600; margin-bottom: 12px; font-family: var(--font-headline);">Question</h4>
-        <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light);">${u(e)}</p>
-        <h4 style="font-weight: 600; margin-bottom: 12px; font-family: var(--font-headline);">Answer</h4>
-        <p style="white-space: pre-wrap;">${u(t.answer)}</p>
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px;">User Query</h5>
+        <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); font-style: italic;">"${g(e)}"</p>
+        
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px;">AI Assistant Response</h5>
+        <div style="white-space: pre-wrap; background: rgba(0,0,0,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 8px; color: var(--text-primary);">${g(t.answer)}</div>
       </div>
-    `;if(b==="deep")return`
+    `;let a="";if(t.sources_found===!1)a=`
+      <div class="card" style="padding: 12px; border-left: 4px solid var(--danger); margin-bottom: 20px; background: rgba(239,68,68,0.02); border-color: rgba(239,68,68,0.1);">
+        <h6 style="color: var(--danger); margin: 0 0 4px; font-weight: 600;">No Legal Sources Found</h6>
+        <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">The legal engine did not retrieve specific statutory codes or judgments for this query. Falling back to general legal AI reasoning.</p>
+      </div>
+    `;else{const s=t.acts||t.applicable_laws||[],r=t.judgments||[],o=s.map(l=>`<span class="badge badge-primary" style="margin-right: 6px; margin-bottom: 6px;">${g(l.name||l.act)} - ${g(l.section)}</span>`).join(""),d=r.map(l=>`<span class="badge badge-success" style="margin-right: 6px; margin-bottom: 6px;">⚖️ ${g(l.name)} (${l.year})</span>`).join("");a=`
+      <div style="margin-bottom: 20px;">
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 8px;">Retrieved Sources</h5>
+        <div style="display: flex; flex-wrap: wrap;">
+          ${o}
+          ${d}
+        </div>
+      </div>
+    `}const n=t.reasoning_summary?`
+    <div style="margin-bottom: 20px; background: rgba(37,99,235,0.02); border: 1px solid rgba(37,99,235,0.1); padding: 12px; border-radius: 6px;">
+      <h5 style="font-weight: 600; color: var(--accent); text-transform: uppercase; font-size: 0.6875rem; margin: 0 0 4px;">AI Search & Reasoning Summary</h5>
+      <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">${g(t.reasoning_summary)}</p>
+    </div>
+  `:"";if(w==="deep")return`
       <div style="font-size: 0.875rem; line-height: 1.6;">
         
         <!-- Header Info -->
@@ -791,23 +842,15 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           </div>
         </div>
 
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px; margin-top: 16px;">User Query</h5>
+        <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); font-style: italic;">"${g(e)}"</p>
+
+        ${n}
+        ${a}
+
         <div class="card" style="padding: 16px; margin-bottom: 20px; border-left: 4px solid var(--accent);">
           <h5 style="margin-bottom: 6px; font-weight: 600; color: var(--text-primary); font-family: var(--font-headline);">Issue Summary</h5>
-          <p style="margin: 0; color: var(--text-secondary); font-size: 0.8125rem;">${u(t.issue_summary)}</p>
-        </div>
-
-        <!-- Applicable statutes -->
-        <div style="margin-bottom: 20px;">
-          <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-family: var(--font-headline);">Applicable Laws & Provisions</h5>
-          <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-            ${(t.applicable_laws||[]).map(n=>`
-              <div style="padding: 10px; background: rgba(0,0,0,0.01); border: 1px solid var(--border); border-radius: 6px;">
-                <div style="font-weight: 600; color: var(--primary);">${u(n.act)}</div>
-                <div class="badge badge-primary" style="margin: 4px 0;">${u(n.section)}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${u(n.description)}</div>
-              </div>
-            `).join("")}
-          </div>
+          <p style="margin: 0; color: var(--text-secondary); font-size: 0.8125rem;">${g(t.issue_summary)}</p>
         </div>
 
         <!-- Arguments pro and con -->
@@ -815,13 +858,13 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           <div class="card" style="padding: 14px; background: rgba(16,185,129,0.02); border-color: rgba(16,185,129,0.1);">
             <h5 style="color: var(--secondary); margin-bottom: 8px; font-weight: 600; font-family: var(--font-headline);">Arguments FOR</h5>
             <ul style="padding-left: 16px; margin: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 6px;">
-              ${(t.arguments_for||[]).map(n=>`<li>${u(n)}</li>`).join("")}
+              ${(t.arguments_for||[]).map(s=>`<li>${g(s)}</li>`).join("")}
             </ul>
           </div>
           <div class="card" style="padding: 14px; background: rgba(239,68,68,0.02); border-color: rgba(239,68,68,0.1);">
             <h5 style="color: var(--danger); margin-bottom: 8px; font-weight: 600; font-family: var(--font-headline);">Arguments AGAINST</h5>
             <ul style="padding-left: 16px; margin: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 6px;">
-              ${(t.arguments_against||[]).map(n=>`<li>${u(n)}</li>`).join("")}
+              ${(t.arguments_against||[]).map(s=>`<li>${g(s)}</li>`).join("")}
             </ul>
           </div>
         </div>
@@ -830,14 +873,20 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         <div style="margin-bottom: 20px;">
           <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-family: var(--font-headline);">Litigation & Compliance Risks</h5>
           <ul style="padding-left: 20px; font-size: 0.8125rem; display: flex; flex-direction: column; gap: 4px;">
-            ${(t.potential_risks||[]).map(n=>`<li>${u(n)}</li>`).join("")}
+            ${(t.potential_risks||[]).map(s=>`<li>${g(s)}</li>`).join("")}
           </ul>
+        </div>
+
+        <!-- Main analysis -->
+        <div style="margin-bottom: 20px;">
+          <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-family: var(--font-headline);">Detailed Analysis</h5>
+          <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6;">${g(t.analysis||"")}</p>
         </div>
 
         <!-- Research Conclusion -->
         <div style="margin-bottom: 20px; background: rgba(0,0,0,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 8px;">
           <h5 style="margin-bottom: 6px; font-weight: 600; color: var(--text-primary); font-family: var(--font-headline);">Concluding Opinion</h5>
-          <p style="margin: 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6;">${u(t.conclusion)}</p>
+          <p style="margin: 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6;">${g(t.conclusion)}</p>
         </div>
 
         <!-- Actions -->
@@ -847,18 +896,25 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         </div>
 
       </div>
-    `;const a=(t.timeline||[]).map(n=>`
+    `;const i=(t.timeline||[]).map(s=>`
     <div style="display: flex; gap: 16px; border-left: 2px solid var(--border); padding-left: 16px; margin-left: 8px; padding-bottom: 12px; position: relative;">
       <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); position: absolute; left: -5px; top: 6px;"></div>
-      <div style="font-weight: 700; font-size: 0.8125rem; color: var(--accent); min-width: 45px;">${u(n.year)}</div>
-      <div style="font-size: 0.75rem; color: var(--text-secondary);">${u(n.event)}</div>
+      <div style="font-weight: 700; font-size: 0.8125rem; color: var(--accent); min-width: 45px;">${g(s.year)}</div>
+      <div style="font-size: 0.75rem; color: var(--text-secondary);">${g(s.event)}</div>
     </div>
   `).join("");return`
     <div style="font-size: 0.875rem; line-height: 1.6;">
       
-      <!-- Executive Summary / Analysis -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
-        <h4 style="font-weight: 700; color: var(--text-primary); margin: 0; font-family: var(--font-headline);">Legal Analysis Summary</h4>
+      <!-- User Query -->
+      <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px;">User Query</h5>
+      <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); font-style: italic;">"${g(e)}"</p>
+
+      ${n}
+      ${a}
+
+      <!-- Final Answer / Analysis -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; margin-top: 24px;">
+        <h4 style="font-weight: 700; color: var(--text-primary); margin: 0; font-family: var(--font-headline);">Final AI Answer</h4>
         <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-secondary);">
           <span>Confidence:</span>
           <span style="font-weight: 700; color: var(--secondary);">${t.confidence_score||90}%</span>
@@ -870,10 +926,10 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
       </div>
 
       <!-- Precedent Timeline -->
-      ${a?`
+      ${i?`
         <div style="margin-bottom: 24px;">
-          <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 12px; font-family: var(--font-headline);">Judgment History & Timeline</h5>
-          <div style="margin-top: 12px;">${a}</div>
+          <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 12px; font-family: var(--font-headline);">Precedent History & Timeline</h5>
+          <div style="margin-top: 12px;">${i}</div>
         </div>
       `:""}
 
@@ -882,9 +938,9 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         <div class="card" style="padding: 16px; background: rgba(0,0,0,0.01); margin-top: 16px;">
           <h5 style="margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-family: var(--font-headline);">Suggested Queries</h5>
           <div style="display: flex; flex-direction: column; gap: 6px;">
-            ${t.follow_ups.map(n=>`
-              <div class="recent-query-item" style="font-size: 0.75rem; padding: 6px 10px; cursor: pointer; color: var(--accent); background: transparent;" onclick="document.getElementById('research-query').value='${u(n).replace(/'/g,"\\'")}'; document.getElementById('research-query').focus();">
-                👉 ${u(n)}
+            ${t.follow_ups.map(s=>`
+              <div class="recent-query-item" style="font-size: 0.75rem; padding: 6px 10px; cursor: pointer; color: var(--accent); background: transparent;" onclick="document.getElementById('research-query').value='${g(s).replace(/'/g,"\\'")}'; document.getElementById('research-query').focus();">
+                👉 ${g(s)}
               </div>
             `).join("")}
           </div>
@@ -898,7 +954,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
       </div>
 
     </div>
-  `}function at(e){const t=document.getElementById("inspector-placeholder"),a=document.getElementById("inspector-content");if(!t||!a)return;t.style.display="none",a.style.display="block";const n=e.judgments||[],i=e.acts||e.applicable_laws||[],s=it(n);a.innerHTML=`
+  `}function st(e){const t=document.getElementById("inspector-placeholder"),a=document.getElementById("inspector-content");if(!t||!a)return;if(!e.is_legal||e.sources_found===!1){t.style.display="flex",a.style.display="none";return}t.style.display="none",a.style.display="block";const n=e.judgments||[],i=e.acts||e.applicable_laws||[],s=rt(n);a.innerHTML=`
     <div style="display: flex; flex-direction: column; gap: 16px; font-size: 0.8125rem;">
       
       <!-- Graph Network -->
@@ -916,8 +972,8 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           <div style="display: flex; flex-direction: column; gap: 6px;">
             ${i.map(r=>`
               <div class="card" style="padding: 10px; margin: 0; border: 1px solid rgba(0,0,0,0.03);">
-                <div style="font-weight: 600; color: var(--text-primary);">${u(r.name||r.act)}</div>
-                <div class="badge badge-primary" style="margin-top: 4px; font-size: 0.625rem;">${u(r.section)}</div>
+                <div style="font-weight: 600; color: var(--text-primary);">${g(r.name||r.act)}</div>
+                <div class="badge badge-primary" style="margin-top: 4px; font-size: 0.625rem;">${g(r.section)}</div>
               </div>
             `).join("")}
           </div>
@@ -929,15 +985,15 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         <div>
           <div style="font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; font-family: var(--font-headline);">Top Authorities</div>
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            ${n.map(r=>{const o=r.strength||r.relevance||85,m=o>=90?"High":o>=70?"Medium":"Low",d=o>=90?"badge-success":"badge-primary";return`
-                <div class="card card-interactive citation-card-item" data-case-title="${u(r.name)}" data-case-ratio="${u(r.snippet)}" style="padding: 12px; margin: 0; border: 1px solid rgba(0,0,0,0.03);">
+            ${n.map(r=>{const o=r.strength||r.relevance||85,d=o>=90?"High":o>=70?"Medium":"Low",l=o>=90?"badge-success":"badge-primary";return`
+                <div class="card card-interactive citation-card-item" data-case-title="${g(r.name)}" data-case-ratio="${g(r.snippet)}" style="padding: 12px; margin: 0; border: 1px solid rgba(0,0,0,0.03);">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
-                    <div style="font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 180px;">${u(r.name)}</div>
-                    <span class="badge ${d}" style="font-size: 0.625rem;">${m}</span>
+                    <div style="font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 180px;">${g(r.name)}</div>
+                    <span class="badge ${l}" style="font-size: 0.625rem;">${d}</span>
                   </div>
-                  <div style="font-size: 0.6875rem; color: var(--text-secondary); margin-bottom: 6px;">${u(r.citation)} | ${u(r.court)}</div>
+                  <div style="font-size: 0.6875rem; color: var(--text-secondary); margin-bottom: 6px;">${g(r.citation)} | ${g(r.court)}</div>
                   <div style="font-size: 0.6875rem; line-height: 1.5; color: var(--text-tertiary); max-height: 48px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-                    ${u(r.snippet)}
+                    ${g(r.snippet)}
                   </div>
                 </div>
               `}).join("")}
@@ -946,13 +1002,13 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
       `:""}
 
     </div>
-  `,document.querySelectorAll(".citation-card-item").forEach(r=>{r.addEventListener("click",()=>{r.dataset.caseTitle;const o=r.dataset.caseRatio;p.info(`Precedent ratio: ${o}`,4e3)})})}function it(e){return!e||e.length===0?'<div class="text-xs text-muted">No graph connections</div>':`
+  `,document.querySelectorAll(".citation-card-item").forEach(r=>{r.addEventListener("click",()=>{const o=r.dataset.caseRatio;u.info(`Precedent ratio: ${o}`,4e3)})})}function rt(e){return!e||e.length===0?'<div class="text-xs text-muted">No graph connections</div>':`
     <div style="display: flex; flex-direction: column; align-items: center; width: 100%; gap: 4px;">
       ${e.map((a,n)=>`
     <div style="display: flex; align-items: center; gap: 8px; width: 100%; border: 1px solid var(--border); padding: 6px 10px; border-radius: 4px; background: var(--bg-surface);">
       <span style="font-size: 0.75rem;">🏛️</span>
       <div style="flex: 1; overflow: hidden; font-size: 0.6875rem; font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-        ${u(a.name)} (${a.year})
+        ${g(a.name)} (${a.year})
       </div>
     </div>
   `).join(`
@@ -963,7 +1019,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
     </div>
   `)}
     </div>
-  `}function st(e,t){var n,i;let a=`<h1>NyayaGPT Research Memorandum: ${u(e)}</h1><div class="meta">Confidence Score: ${t.confidence_score||90}%</div>`;return t.issue_summary&&(a+=`<div class="section"><div class="section-title">Issue Summary</div><p>${u(t.issue_summary)}</p></div>`),(n=t.applicable_laws)!=null&&n.length&&(a+='<div class="section"><div class="section-title">Applicable Laws</div>',t.applicable_laws.forEach(s=>{a+=`<p><strong>${u(s.act)} — ${u(s.section)}</strong><br>${u(s.description)}</p>`}),a+="</div>"),(i=t.judgments)!=null&&i.length&&(a+='<div class="section"><div class="section-title">Cited Authorities & Precedents</div>',t.judgments.forEach(s=>{a+=`<p><strong>${u(s.name)}</strong> (${u(s.citation)}) - ${u(s.court)}, ${s.year}<br>${u(s.snippet)}</p>`}),a+="</div>"),t.analysis&&(a+=`<div class="section"><div class="section-title">Analysis</div><p>${t.analysis.replace(/\n/g,"<br>")}</p></div>`),t.conclusion&&(a+=`<div class="section"><div class="section-title">Concluding Opinion</div><p>${u(t.conclusion)}</p></div>`),a}function u(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const de=[{id:"facts",label:"Facts",icon:"📋"},{id:"issues",label:"Issues",icon:"❓"},{id:"petitioner_arguments",label:"Petitioner Args",icon:"👤"},{id:"respondent_arguments",label:"Respondent Args",icon:"👥"},{id:"court_reasoning",label:"Reasoning",icon:"🧠"},{id:"verdict",label:"Verdict",icon:"⚖️"},{id:"key_takeaways",label:"Takeaways",icon:"💡"}];let rt=null;function ot(){return`
+  `}function ot(e,t){var n,i;let a=`<h1>NyayaGPT Research Memorandum: ${g(e)}</h1><div class="meta">Confidence Score: ${t.confidence_score||90}%</div>`;return t.issue_summary&&(a+=`<div class="section"><div class="section-title">Issue Summary</div><p>${g(t.issue_summary)}</p></div>`),(n=t.applicable_laws)!=null&&n.length&&(a+='<div class="section"><div class="section-title">Applicable Laws</div>',t.applicable_laws.forEach(s=>{a+=`<p><strong>${g(s.act)} — ${g(s.section)}</strong><br>${g(s.description)}</p>`}),a+="</div>"),(i=t.judgments)!=null&&i.length&&(a+='<div class="section"><div class="section-title">Cited Authorities & Precedents</div>',t.judgments.forEach(s=>{a+=`<p><strong>${g(s.name)}</strong> (${g(s.citation)}) - ${g(s.court)}, ${s.year}<br>${g(s.snippet)}</p>`}),a+="</div>"),t.analysis&&(a+=`<div class="section"><div class="section-title">Analysis</div><p>${t.analysis.replace(/\n/g,"<br>")}</p></div>`),t.conclusion&&(a+=`<div class="section"><div class="section-title">Concluding Opinion</div><p>${g(t.conclusion)}</p></div>`),a}function g(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const me=[{id:"facts",label:"Facts",icon:"📋"},{id:"issues",label:"Issues",icon:"❓"},{id:"petitioner_arguments",label:"Petitioner Args",icon:"👤"},{id:"respondent_arguments",label:"Respondent Args",icon:"👥"},{id:"court_reasoning",label:"Reasoning",icon:"🧠"},{id:"verdict",label:"Verdict",icon:"⚖️"},{id:"key_takeaways",label:"Takeaways",icon:"💡"}];let lt=null;function ct(){return`
     <div class="page-content animate-fade-up">
       <div class="page-header">
         <h2>📄 Judgment Summarizer</h2>
@@ -988,7 +1044,7 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
           </div>
 
           <div style="display: flex; gap: 12px; margin-top: 16px;">
-            ${w()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
+            ${S()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
             <button class="btn btn-primary" id="summarize-btn" style="margin-left: auto;">
               <span id="summarize-btn-text">Summarize Judgment</span>
             </button>
@@ -1002,18 +1058,18 @@ In addition to criminal remedies under Section 498A IPC, the Protection of Women
         <div id="summary-result-section" style="display: none;"></div>
       </div>
     </div>
-  `}function lt(){const e=document.getElementById("dropzone"),t=document.getElementById("file-input"),a=document.getElementById("judgment-text"),n=document.getElementById("summarize-btn");e==null||e.addEventListener("click",()=>t==null?void 0:t.click()),e==null||e.addEventListener("dragover",i=>{i.preventDefault(),e.classList.add("drag-over")}),e==null||e.addEventListener("dragleave",()=>e.classList.remove("drag-over")),e==null||e.addEventListener("drop",i=>{i.preventDefault(),e.classList.remove("drag-over");const s=i.dataTransfer.files[0];s&&ee(s,a,e)}),t==null||t.addEventListener("change",i=>{const s=i.target.files[0];s&&ee(s,a,e)}),n==null||n.addEventListener("click",()=>dt(a))}function ee(e,t,a){if(e.size>10*1024*1024){p.error("File too large. Maximum 10MB.");return}const n=e.name.split(".").pop().toLowerCase();if(n==="txt"){const i=new FileReader;i.onload=s=>{t.value=s.target.result,a.innerHTML=`
+  `}function dt(){const e=document.getElementById("dropzone"),t=document.getElementById("file-input"),a=document.getElementById("judgment-text"),n=document.getElementById("summarize-btn");e==null||e.addEventListener("click",()=>t==null?void 0:t.click()),e==null||e.addEventListener("dragover",i=>{i.preventDefault(),e.classList.add("drag-over")}),e==null||e.addEventListener("dragleave",()=>e.classList.remove("drag-over")),e==null||e.addEventListener("drop",i=>{i.preventDefault(),e.classList.remove("drag-over");const s=i.dataTransfer.files[0];s&&se(s,a,e)}),t==null||t.addEventListener("change",i=>{const s=i.target.files[0];s&&se(s,a,e)}),n==null||n.addEventListener("click",()=>pt(a))}function se(e,t,a){if(e.size>10*1024*1024){u.error("File too large. Maximum 10MB.");return}const n=e.name.split(".").pop().toLowerCase();if(n==="txt"){const i=new FileReader;i.onload=s=>{t.value=s.target.result,a.innerHTML=`
         <div class="file-dropzone-icon" style="background: rgba(0,184,148,0.1);">✓</div>
         <h4>${e.name}</h4>
         <p class="text-muted">${(e.size/1024).toFixed(1)} KB — Text extracted</p>
-      `,p.success("File loaded successfully")},i.readAsText(e)}else if(n==="pdf"){const i=new FileReader;i.onload=()=>{t.value=`[PDF uploaded: ${e.name}]
+      `,u.success("File loaded successfully")},i.readAsText(e)}else if(n==="pdf"){const i=new FileReader;i.onload=()=>{t.value=`[PDF uploaded: ${e.name}]
 
 Note: For best results with PDF files, please copy and paste the text content directly. Client-side PDF text extraction will be enhanced in the next update.`,a.innerHTML=`
         <div class="file-dropzone-icon" style="background: rgba(253,203,110,0.1);">📄</div>
         <h4>${e.name}</h4>
         <p class="text-muted">${(e.size/1024).toFixed(1)} KB — PDF uploaded</p>
         <p class="file-types">💡 Tip: Paste the text directly for best results</p>
-      `,p.info("PDF uploaded. For best results, paste the text content directly.")},i.readAsArrayBuffer(e)}else p.warning("Please upload a PDF or TXT file")}async function dt(e){const t=e.value.trim();if(!t||t.length<100){p.warning("Please provide judgment text (minimum 100 characters)");return}const a=document.getElementById("summarize-btn"),n=document.getElementById("processing-section"),i=document.getElementById("summary-result-section");a.disabled=!0,document.getElementById("summarize-btn-text").textContent="Processing...",n.style.display="block",i.style.display="none",n.innerHTML=ct(),await pt();try{let s;w()?s=await Be(t):(await new Promise(r=>setTimeout(r,1500)),s=Ye(),p.info("Showing demo summary. Add your Gemini API key in Settings for live summarization.")),rt=s,l.incrementUsage("summaries"),l.logActivity("summary",`Summarized: ${s.title||"Judgment"}`,"📄"),n.style.display="none",i.style.display="block",i.innerHTML=mt(s),i.scrollIntoView({behavior:"smooth"}),ut(s),gt(s,t)}catch(s){p.error("Summarization failed: "+s.message),n.style.display="none"}finally{a.disabled=!1,document.getElementById("summarize-btn-text").textContent="Summarize Judgment"}}function ct(){return`
+      `,u.info("PDF uploaded. For best results, paste the text content directly.")},i.readAsArrayBuffer(e)}else u.warning("Please upload a PDF or TXT file")}async function pt(e){const t=e.value.trim();if(!t||t.length<100){u.warning("Please provide judgment text (minimum 100 characters)");return}const a=document.getElementById("summarize-btn"),n=document.getElementById("processing-section"),i=document.getElementById("summary-result-section");a.disabled=!0,document.getElementById("summarize-btn-text").textContent="Processing...",n.style.display="block",i.style.display="none",n.innerHTML=ut(),await mt();try{let s;S()?s=await Oe(t):(await new Promise(r=>setTimeout(r,1500)),s=Xe(),u.info("Showing demo summary. Add your Gemini API key in Settings for live summarization.")),lt=s,p.incrementUsage("summaries"),p.logActivity("summary",`Summarized: ${s.title||"Judgment"}`,"📄"),n.style.display="none",i.style.display="block",i.innerHTML=gt(s),i.scrollIntoView({behavior:"smooth"}),yt(s),ft(s,t)}catch(s){u.error("Summarization failed: "+s.message),n.style.display="none"}finally{a.disabled=!1,document.getElementById("summarize-btn-text").textContent="Summarize Judgment"}}function ut(){return`
     <div class="card animate-fade-up" style="padding: 32px; text-align: center;">
       <div class="typing-indicator" style="justify-content: center; margin-bottom: 16px;">
         <div class="typing-dot"></div>
@@ -1040,7 +1096,7 @@ Note: For best results with PDF files, please copy and paste the text content di
         </div>
       </div>
     </div>
-  `}async function pt(){for(let e=1;e<=4;e++){await new Promise(n=>setTimeout(n,600));const t=document.getElementById(`step-${e}`);t&&(t.classList.remove("active"),t.classList.add("completed"),t.querySelector(".processing-step-icon").textContent="✓");const a=document.getElementById(`step-${e+1}`);a&&(a.classList.remove("pending"),a.classList.add("active"))}}function mt(e){const t=de.map((a,n)=>`
+  `}async function mt(){for(let e=1;e<=4;e++){await new Promise(n=>setTimeout(n,600));const t=document.getElementById(`step-${e}`);t&&(t.classList.remove("active"),t.classList.add("completed"),t.querySelector(".processing-step-icon").textContent="✓");const a=document.getElementById(`step-${e+1}`);a&&(a.classList.remove("pending"),a.classList.add("active"))}}function gt(e){const t=me.map((a,n)=>`
     <button class="summary-tab ${n===0?"active":""}" data-tab="${a.id}">
       ${a.icon} ${a.label}
     </button>
@@ -1058,10 +1114,10 @@ Note: For best results with PDF files, please copy and paste the text content di
       </div>
       <div class="summary-tabs">${t}</div>
       <div class="summary-content" id="summary-content">
-        ${ce("facts",e)}
+        ${ge("facts",e)}
       </div>
     </div>
-  `}function ce(e,t){const a=t[e];return a?Array.isArray(a)?`<ul>${a.map(n=>`<li>${A(n)}</li>`).join("")}</ul>`:`<p>${A(a)}</p>`:'<p class="text-muted">No data available for this section.</p>'}function ut(e){document.querySelectorAll(".summary-tab").forEach(t=>{t.addEventListener("click",()=>{document.querySelectorAll(".summary-tab").forEach(n=>n.classList.remove("active")),t.classList.add("active");const a=document.getElementById("summary-content");a&&(a.innerHTML=ce(t.dataset.tab,e))})})}function gt(e,t){var a,n;(a=document.getElementById("save-summary-btn"))==null||a.addEventListener("click",()=>{l.saveDocument({type:"summary",title:e.title||"Judgment Summary",content:e}),p.success("Summary saved to library")}),(n=document.getElementById("export-summary-btn"))==null||n.addEventListener("click",()=>{let i=`<h1>${A(e.title||"Judgment Summary")}</h1>`;i+=`<div class="meta">${A(e.court||"")} ${e.date?"· "+A(e.date):""}</div>`,de.forEach(s=>{const r=e[s.id];r&&(i+=`<div class="section"><div class="section-title">${s.label}</div>`,Array.isArray(r)?i+=`<ul>${r.map(o=>`<li>${A(o)}</li>`).join("")}</ul>`:i+=`<p>${A(r)}</p>`,i+="</div>")}),D(i,e.title||"Judgment Summary",`summary_${Date.now()}.html`),p.success("Summary exported")})}function A(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const pe={legal_notice:"📋",nda:"🤝",employment:"👔",service_agreement:"🔧",partnership:"🤝",rent_agreement:"🏠"};let $=null,me=null;function yt(){return`
+  `}function ge(e,t){const a=t[e];return a?Array.isArray(a)?`<ul>${a.map(n=>`<li>${A(n)}</li>`).join("")}</ul>`:`<p>${A(a)}</p>`:'<p class="text-muted">No data available for this section.</p>'}function yt(e){document.querySelectorAll(".summary-tab").forEach(t=>{t.addEventListener("click",()=>{document.querySelectorAll(".summary-tab").forEach(n=>n.classList.remove("active")),t.classList.add("active");const a=document.getElementById("summary-content");a&&(a.innerHTML=ge(t.dataset.tab,e))})})}function ft(e,t){var a,n;(a=document.getElementById("save-summary-btn"))==null||a.addEventListener("click",()=>{p.saveDocument({type:"summary",title:e.title||"Judgment Summary",content:e}),u.success("Summary saved to library")}),(n=document.getElementById("export-summary-btn"))==null||n.addEventListener("click",()=>{let i=`<h1>${A(e.title||"Judgment Summary")}</h1>`;i+=`<div class="meta">${A(e.court||"")} ${e.date?"· "+A(e.date):""}</div>`,me.forEach(s=>{const r=e[s.id];r&&(i+=`<div class="section"><div class="section-title">${s.label}</div>`,Array.isArray(r)?i+=`<ul>${r.map(o=>`<li>${A(o)}</li>`).join("")}</ul>`:i+=`<p>${A(r)}</p>`,i+="</div>")}),R(i,e.title||"Judgment Summary",`summary_${Date.now()}.html`),u.success("Summary exported")})}function A(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const ye={legal_notice:"📋",nda:"🤝",employment:"👔",service_agreement:"🔧",partnership:"🤝",rent_agreement:"🏠"};let _=null,fe=null;function ht(){return`
     <div class="page-content animate-fade-up">
       <div class="page-header">
         <h2>✍️ Legal Draft Generator</h2>
@@ -1070,9 +1126,9 @@ Note: For best results with PDF files, please copy and paste the text content di
 
       <h4 style="margin-bottom: 16px;">Choose Template</h4>
       <div class="template-grid" id="template-grid">
-        ${oe().map(a=>`
+        ${pe().map(a=>`
     <div class="template-card" data-template="${a.id}" id="template-${a.id}">
-      <div class="template-card-icon">${pe[a.id]||"📄"}</div>
+      <div class="template-card-icon">${ye[a.id]||"📄"}</div>
       <h5>${a.name}</h5>
       <p>${a.fields.length} fields</p>
     </div>
@@ -1082,17 +1138,17 @@ Note: For best results with PDF files, please copy and paste the text content di
       <div id="draft-form-section" style="display: none;"></div>
       <div id="draft-preview-section" style="display: none;"></div>
     </div>
-  `}function vt(){document.querySelectorAll(".template-card").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.template;ft(t)})})}function ft(e){var o,m,d;$=e,me=null,document.querySelectorAll(".template-card").forEach(c=>c.classList.remove("selected")),(o=document.getElementById(`template-${e}`))==null||o.classList.add("selected");const t=document.getElementById("draft-form-section"),a=document.getElementById("draft-preview-section");a.style.display="none";const n=le(e),s=oe().find(c=>c.id===e),r=n.map(c=>{const f=c.type==="textarea";let y;return c.type==="textarea"?y=`<textarea class="form-textarea" id="field-${c.name}" placeholder="${c.hint||""}" ${c.required?"required":""} rows="3"></textarea>`:c.type==="date"?y=`<input type="date" class="form-input" id="field-${c.name}" ${c.required?"required":""} />`:c.type==="number"?y=`<input type="number" class="form-input" id="field-${c.name}" ${c.required?"required":""} min="1" />`:y=`<input type="text" class="form-input" id="field-${c.name}" placeholder="${c.hint||""}" ${c.required?"required":""} />`,`
-      <div class="form-group ${f?"full-width":""}">
+  `}function vt(){document.querySelectorAll(".template-card").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.template;bt(t)})})}function bt(e){var o,d,l;_=e,fe=null,document.querySelectorAll(".template-card").forEach(c=>c.classList.remove("selected")),(o=document.getElementById(`template-${e}`))==null||o.classList.add("selected");const t=document.getElementById("draft-form-section"),a=document.getElementById("draft-preview-section");a.style.display="none";const n=ue(e),s=pe().find(c=>c.id===e),r=n.map(c=>{const m=c.type==="textarea";let f;return c.type==="textarea"?f=`<textarea class="form-textarea" id="field-${c.name}" placeholder="${c.hint||""}" ${c.required?"required":""} rows="3"></textarea>`:c.type==="date"?f=`<input type="date" class="form-input" id="field-${c.name}" ${c.required?"required":""} />`:c.type==="number"?f=`<input type="number" class="form-input" id="field-${c.name}" ${c.required?"required":""} min="1" />`:f=`<input type="text" class="form-input" id="field-${c.name}" placeholder="${c.hint||""}" ${c.required?"required":""} />`,`
+      <div class="form-group ${m?"full-width":""}">
         <label class="form-label">${c.label} ${c.required?"*":""}</label>
-        ${y}
+        ${f}
         ${c.hint&&c.type!=="textarea"?`<span class="form-hint">${c.hint}</span>`:""}
       </div>
     `}).join("");t.style.display="block",t.innerHTML=`
     <div class="draft-form animate-fade-up">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-        <h3>${pe[e]||"📄"} ${(s==null?void 0:s.name)||"Draft"}</h3>
-        ${w()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
+        <h3>${ye[e]||"📄"} ${(s==null?void 0:s.name)||"Draft"}</h3>
+        ${S()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
       </div>
       <form id="draft-generate-form">
         <div class="form-grid">
@@ -1106,10 +1162,10 @@ Note: For best results with PDF files, please copy and paste the text content di
         </div>
       </form>
     </div>
-  `,t.scrollIntoView({behavior:"smooth"}),(m=document.getElementById("draft-generate-form"))==null||m.addEventListener("submit",c=>{c.preventDefault(),ht()}),(d=document.getElementById("clear-draft-btn"))==null||d.addEventListener("click",()=>{document.querySelectorAll("#draft-generate-form input, #draft-generate-form textarea").forEach(f=>{f.value=""})})}async function ht(){const e=le($),t={};let a=!0;if(e.forEach(i=>{var o;const s=document.getElementById(`field-${i.name}`),r=((o=s==null?void 0:s.value)==null?void 0:o.trim())||"";i.required&&!r?(a=!1,s!=null&&s.style&&(s.style.borderColor="var(--danger)")):s&&(s.style.borderColor=""),t[i.name]=r}),!a){p.warning("Please fill in all required fields");return}const n=document.getElementById("generate-draft-btn");n.disabled=!0,document.getElementById("generate-btn-text").textContent="Generating...";try{let i;w()?i=await je($,t):(await new Promise(s=>setTimeout(s,2e3)),i=xt($,t),p.info("Showing demo draft. Add your Gemini API key in Settings for live generation.")),me=i,l.incrementUsage("drafts"),l.logActivity("draft",`Generated: ${i.title||$}`,"✍️"),bt(i,t)}catch(i){p.error("Draft generation failed: "+i.message)}finally{n.disabled=!1,document.getElementById("generate-btn-text").textContent="Generate Draft"}}function bt(e,t){var n,i,s;const a=document.getElementById("draft-preview-section");a.style.display="block",a.innerHTML=`
+  `,t.scrollIntoView({behavior:"smooth"}),(d=document.getElementById("draft-generate-form"))==null||d.addEventListener("submit",c=>{c.preventDefault(),xt()}),(l=document.getElementById("clear-draft-btn"))==null||l.addEventListener("click",()=>{document.querySelectorAll("#draft-generate-form input, #draft-generate-form textarea").forEach(m=>{m.value=""})})}async function xt(){const e=ue(_),t={};let a=!0;if(e.forEach(i=>{var o;const s=document.getElementById(`field-${i.name}`),r=((o=s==null?void 0:s.value)==null?void 0:o.trim())||"";i.required&&!r?(a=!1,s!=null&&s.style&&(s.style.borderColor="var(--danger)")):s&&(s.style.borderColor=""),t[i.name]=r}),!a){u.warning("Please fill in all required fields");return}const n=document.getElementById("generate-draft-btn");n.disabled=!0,document.getElementById("generate-btn-text").textContent="Generating...";try{let i;S()?i=await He(_,t):(await new Promise(s=>setTimeout(s,2e3)),i=At(_,t),u.info("Showing demo draft. Add your Gemini API key in Settings for live generation.")),fe=i,p.incrementUsage("drafts"),p.logActivity("draft",`Generated: ${i.title||_}`,"✍️"),wt(i,t)}catch(i){u.error("Draft generation failed: "+i.message)}finally{n.disabled=!1,document.getElementById("generate-btn-text").textContent="Generate Draft"}}function wt(e,t){var n,i,s;const a=document.getElementById("draft-preview-section");a.style.display="block",a.innerHTML=`
     <div class="draft-preview animate-fade-up">
       <div class="draft-preview-header">
-        <h4>${ne(e.title||"Legal Draft")}</h4>
+        <h4>${oe(e.title||"Legal Draft")}</h4>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-ghost btn-sm" id="copy-draft-btn">📋 Copy</button>
           <button class="btn btn-secondary btn-sm" id="export-draft-btn">📥 Export</button>
@@ -1117,10 +1173,10 @@ Note: For best results with PDF files, please copy and paste the text content di
         </div>
       </div>
       <div class="draft-preview-content" id="draft-content">
-        ${te(e.content||e.raw||"")}
+        ${re(e.content||e.raw||"")}
       </div>
     </div>
-  `,a.scrollIntoView({behavior:"smooth"}),(n=document.getElementById("copy-draft-btn"))==null||n.addEventListener("click",()=>{navigator.clipboard.writeText(e.content||e.raw||""),p.success("Draft copied to clipboard")}),(i=document.getElementById("export-draft-btn"))==null||i.addEventListener("click",()=>{D(`<h1>${ne(e.title||"Legal Draft")}</h1>${te(e.content||e.raw||"")}`,e.title||"Legal Draft",`draft_${$}_${Date.now()}.html`),p.success("Draft exported")}),(s=document.getElementById("save-draft-btn"))==null||s.addEventListener("click",()=>{l.saveDocument({type:"draft",title:e.title||`${$} Draft`,content:e,metadata:{template:$,formData:t}}),p.success("Draft saved to library")})}function te(e){return e.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>").replace(/^(\d+\.\s)/gm,"<strong>$1</strong>").replace(/^(WHEREAS|NOW THEREFORE|IN WITNESS WHEREOF)/gm,"<strong>$1</strong>")}function xt(e,t){const a=new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});return{legal_notice:{title:"LEGAL NOTICE",content:`LEGAL NOTICE
+  `,a.scrollIntoView({behavior:"smooth"}),(n=document.getElementById("copy-draft-btn"))==null||n.addEventListener("click",()=>{navigator.clipboard.writeText(e.content||e.raw||""),u.success("Draft copied to clipboard")}),(i=document.getElementById("export-draft-btn"))==null||i.addEventListener("click",()=>{R(`<h1>${oe(e.title||"Legal Draft")}</h1>${re(e.content||e.raw||"")}`,e.title||"Legal Draft",`draft_${_}_${Date.now()}.html`),u.success("Draft exported")}),(s=document.getElementById("save-draft-btn"))==null||s.addEventListener("click",()=>{p.saveDocument({type:"draft",title:e.title||`${_} Draft`,content:e,metadata:{template:_,formData:t}}),u.success("Draft saved to library")})}function re(e){return e.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>").replace(/^(\d+\.\s)/gm,"<strong>$1</strong>").replace(/^(WHEREAS|NOW THEREFORE|IN WITNESS WHEREOF)/gm,"<strong>$1</strong>")}function At(e,t){const a=new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});return{legal_notice:{title:"LEGAL NOTICE",content:`LEGAL NOTICE
 
 Date: ${a}
 
@@ -1223,7 +1279,7 @@ To generate real drafts, please add your Gemini API key in Settings.
 
 Details provided:
 ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
-`)}`}}function ne(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const wt=[{id:"petition",label:"Petition",icon:"📑"},{id:"fir",label:"FIR",icon:"🚔"},{id:"agreement",label:"Agreement",icon:"📃"},{id:"legal_notice",label:"Legal Notice",icon:"📋"},{id:"contract",label:"Contract",icon:"📝"}];let B=null;function At(){return`
+`)}`}}function oe(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const St=[{id:"petition",label:"Petition",icon:"📑"},{id:"fir",label:"FIR",icon:"🚔"},{id:"agreement",label:"Agreement",icon:"📃"},{id:"legal_notice",label:"Legal Notice",icon:"📋"},{id:"contract",label:"Contract",icon:"📝"}];let B=null;function $t(){return`
     <div class="page-content animate-fade-up">
       <div class="page-header">
         <h2>🔬 AI Case Analyzer</h2>
@@ -1232,7 +1288,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
 
       <div class="analyzer-upload">
         <h4 style="margin-bottom: 12px;">Document Type</h4>
-        <div class="doc-type-selector">${wt.map(t=>`
+        <div class="doc-type-selector">${St.map(t=>`
     <button class="chip" data-doctype="${t.id}" id="doctype-${t.id}">
       ${t.icon} ${t.label}
     </button>
@@ -1253,7 +1309,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         </div>
 
         <div style="display: flex; gap: 12px; align-items: center; margin-top: 16px;">
-          ${w()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
+          ${S()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
           <button class="btn btn-primary" id="analyze-btn" style="margin-left: auto;">
             <span id="analyze-btn-text">Analyze Document</span>
           </button>
@@ -1263,28 +1319,28 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
       <div id="analysis-loading" style="display: none;"></div>
       <div id="analysis-report" style="display: none;"></div>
     </div>
-  `}function St(){var n;document.querySelectorAll("[data-doctype]").forEach(i=>{i.addEventListener("click",()=>{B=i.dataset.doctype,document.querySelectorAll("[data-doctype]").forEach(s=>s.classList.remove("active")),i.classList.add("active")})});const e=document.getElementById("analyzer-dropzone"),t=document.getElementById("analyzer-file-input"),a=document.getElementById("analyzer-text");e==null||e.addEventListener("click",()=>t==null?void 0:t.click()),e==null||e.addEventListener("dragover",i=>{i.preventDefault(),e.classList.add("drag-over")}),e==null||e.addEventListener("dragleave",()=>e.classList.remove("drag-over")),e==null||e.addEventListener("drop",i=>{i.preventDefault(),e.classList.remove("drag-over");const s=i.dataTransfer.files[0];s&&ae(s,a,e)}),t==null||t.addEventListener("change",i=>{const s=i.target.files[0];s&&ae(s,a,e)}),(n=document.getElementById("analyze-btn"))==null||n.addEventListener("click",()=>Et(a))}function ae(e,t,a){if(e.size>10*1024*1024){p.error("File too large. Maximum 10MB.");return}if(e.name.split(".").pop().toLowerCase()==="txt"){const i=new FileReader;i.onload=s=>{t.value=s.target.result,a.innerHTML=`
+  `}function It(){var n;document.querySelectorAll("[data-doctype]").forEach(i=>{i.addEventListener("click",()=>{B=i.dataset.doctype,document.querySelectorAll("[data-doctype]").forEach(s=>s.classList.remove("active")),i.classList.add("active")})});const e=document.getElementById("analyzer-dropzone"),t=document.getElementById("analyzer-file-input"),a=document.getElementById("analyzer-text");e==null||e.addEventListener("click",()=>t==null?void 0:t.click()),e==null||e.addEventListener("dragover",i=>{i.preventDefault(),e.classList.add("drag-over")}),e==null||e.addEventListener("dragleave",()=>e.classList.remove("drag-over")),e==null||e.addEventListener("drop",i=>{i.preventDefault(),e.classList.remove("drag-over");const s=i.dataTransfer.files[0];s&&le(s,a,e)}),t==null||t.addEventListener("change",i=>{const s=i.target.files[0];s&&le(s,a,e)}),(n=document.getElementById("analyze-btn"))==null||n.addEventListener("click",()=>Et(a))}function le(e,t,a){if(e.size>10*1024*1024){u.error("File too large. Maximum 10MB.");return}if(e.name.split(".").pop().toLowerCase()==="txt"){const i=new FileReader;i.onload=s=>{t.value=s.target.result,a.innerHTML=`
         <div class="file-dropzone-icon" style="background:rgba(0,184,148,0.1);">✓</div>
         <h4>${e.name}</h4>
         <p class="text-muted">${(e.size/1024).toFixed(1)} KB loaded</p>
-      `,p.success("File loaded")},i.readAsText(e)}else a.innerHTML=`
+      `,u.success("File loaded")},i.readAsText(e)}else a.innerHTML=`
       <div class="file-dropzone-icon" style="background:rgba(253,203,110,0.1);">📄</div>
       <h4>${e.name}</h4>
       <p class="text-muted">💡 Paste text directly for best results</p>
-    `,p.info("For best results, paste the document text directly")}async function Et(e){const t=e.value.trim();if(!t||t.length<50){p.warning("Please provide document text (minimum 50 characters)");return}if(!B){p.warning("Please select a document type");return}const a=document.getElementById("analyze-btn"),n=document.getElementById("analysis-loading"),i=document.getElementById("analysis-report");a.disabled=!0,document.getElementById("analyze-btn-text").textContent="Analyzing...",n.style.display="block",i.style.display="none",n.innerHTML=`
+    `,u.info("For best results, paste the document text directly")}async function Et(e){const t=e.value.trim();if(!t||t.length<50){u.warning("Please provide document text (minimum 50 characters)");return}if(!B){u.warning("Please select a document type");return}const a=document.getElementById("analyze-btn"),n=document.getElementById("analysis-loading"),i=document.getElementById("analysis-report");a.disabled=!0,document.getElementById("analyze-btn-text").textContent="Analyzing...",n.style.display="block",i.style.display="none",n.innerHTML=`
     <div class="card animate-fade-up" style="padding: 40px; text-align: center;">
       <div class="typing-indicator" style="justify-content: center; margin-bottom: 16px;">
         <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
       </div>
       <p class="text-muted">Analyzing document for risks and issues...</p>
     </div>
-  `;try{let s;w()?s=await Ge(t,B):(await new Promise(r=>setTimeout(r,2500)),s=Je(),p.info("Showing demo analysis. Add Gemini API key in Settings for live analysis.")),l.incrementUsage("analyses"),l.logActivity("analysis",`Analyzed: ${B}`,"🔬"),n.style.display="none",i.style.display="block",i.innerHTML=It(s),i.scrollIntoView({behavior:"smooth"}),$t(s)}catch(s){p.error("Analysis failed: "+s.message),n.style.display="none"}finally{a.disabled=!1,document.getElementById("analyze-btn-text").textContent="Analyze Document"}}function It(e){const t=e.overall_risk_score>=70?"var(--danger)":e.overall_risk_score>=40?"var(--warning)":"var(--secondary)",a=e.overall_risk_score>=70?"High Risk":e.overall_risk_score>=40?"Medium Risk":"Low Risk",n=2*Math.PI*60,i=n-e.overall_risk_score/100*n,s=(e.key_facts||[]).map(d=>`<div class="fact-item"><span>•</span><span>${h(d)}</span></div>`).join(""),r=(e.risks||[]).map(d=>`<div class="risk-item">
-      <div class="risk-dot ${d.level}"></div>
+  `;try{let s;S()?s=await We(t,B):(await new Promise(r=>setTimeout(r,2500)),s=Ve(),u.info("Showing demo analysis. Add Gemini API key in Settings for live analysis.")),p.incrementUsage("analyses"),p.logActivity("analysis",`Analyzed: ${B}`,"🔬"),n.style.display="none",i.style.display="block",i.innerHTML=kt(s),i.scrollIntoView({behavior:"smooth"}),Ct(s)}catch(s){u.error("Analysis failed: "+s.message),n.style.display="none"}finally{a.disabled=!1,document.getElementById("analyze-btn-text").textContent="Analyze Document"}}function kt(e){const t=e.overall_risk_score>=70?"var(--danger)":e.overall_risk_score>=40?"var(--warning)":"var(--secondary)",a=e.overall_risk_score>=70?"High Risk":e.overall_risk_score>=40?"Medium Risk":"Low Risk",n=2*Math.PI*60,i=n-e.overall_risk_score/100*n,s=(e.key_facts||[]).map(l=>`<div class="fact-item"><span>•</span><span>${b(l)}</span></div>`).join(""),r=(e.risks||[]).map(l=>`<div class="risk-item">
+      <div class="risk-dot ${l.level}"></div>
       <div class="risk-item-content">
-        <h5>${h(d.title)}</h5>
-        <p>${h(d.description)}</p>
+        <h5>${b(l.title)}</h5>
+        <p>${b(l.description)}</p>
       </div>
-    </div>`).join(""),o=(e.missing_clauses||[]).map(d=>`<div class="clause-item"><span>⚠️</span><div><strong>${h(d.clause)}</strong><br><span class="text-xs text-muted">${h(d.importance)}</span></div></div>`).join(""),m=(e.legal_issues||[]).map(d=>`<div class="issue-item"><span>ℹ️</span><div><strong>${h(d.issue)}</strong><br><span class="text-xs text-muted">${h(d.explanation)}</span></div></div>`).join("");return`
+    </div>`).join(""),o=(e.missing_clauses||[]).map(l=>`<div class="clause-item"><span>⚠️</span><div><strong>${b(l.clause)}</strong><br><span class="text-xs text-muted">${b(l.importance)}</span></div></div>`).join(""),d=(e.legal_issues||[]).map(l=>`<div class="issue-item"><span>ℹ️</span><div><strong>${b(l.issue)}</strong><br><span class="text-xs text-muted">${b(l.explanation)}</span></div></div>`).join("");return`
     <div class="animate-fade-up">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
         <h3>Analysis Report</h3>
@@ -1310,7 +1366,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         </div>
         <div style="text-align: left; max-width: 400px;">
           <h4 style="margin-bottom: 8px;">Overall Assessment</h4>
-          <p class="text-muted text-sm" style="line-height: 1.7;">${h(e.recommendation||"")}</p>
+          <p class="text-muted text-sm" style="line-height: 1.7;">${b(e.recommendation||"")}</p>
         </div>
       </div>
 
@@ -1336,11 +1392,11 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         <!-- Legal Issues -->
         <div class="analysis-card">
           <h4>⚖️ Legal Issues</h4>
-          ${m||'<p class="text-muted">No legal issues identified.</p>'}
+          ${d||'<p class="text-muted">No legal issues identified.</p>'}
         </div>
       </div>
     </div>
-  `}function $t(e){var t,a;(t=document.getElementById("save-analysis-btn"))==null||t.addEventListener("click",()=>{l.saveDocument({type:"analysis",title:`${e.document_type||"Document"} Analysis`,content:e}),p.success("Analysis saved to library")}),(a=document.getElementById("export-analysis-btn"))==null||a.addEventListener("click",()=>{let n="<h1>Case Analysis Report</h1>";n+=`<div class="meta">Document Type: ${h(e.document_type||"Unknown")} | Risk Score: ${e.overall_risk_score}/100</div>`,n+='<div class="section"><div class="section-title">Key Facts</div><ul>',(e.key_facts||[]).forEach(i=>{n+=`<li>${h(i)}</li>`}),n+="</ul></div>",n+='<div class="section"><div class="section-title">Risk Assessment</div>',(e.risks||[]).forEach(i=>{n+=`<p><span class="risk-${i.level}">[${i.level.toUpperCase()}]</span> <strong>${h(i.title)}</strong> — ${h(i.description)}</p>`}),n+="</div>",n+='<div class="section"><div class="section-title">Missing Clauses</div><ul>',(e.missing_clauses||[]).forEach(i=>{n+=`<li><strong>${h(i.clause)}</strong>: ${h(i.importance)}</li>`}),n+="</ul></div>",n+='<div class="section"><div class="section-title">Recommendation</div>',n+=`<p>${h(e.recommendation||"")}</p></div>`,D(n,"Case Analysis Report",`analysis_${Date.now()}.html`),p.success("Analysis exported")})}function h(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}function kt({title:e,content:t,footer:a,maxWidth:n="540px"}){const i=document.getElementById("modal-container");if(!i)return;i.innerHTML=`
+  `}function Ct(e){var t,a;(t=document.getElementById("save-analysis-btn"))==null||t.addEventListener("click",()=>{p.saveDocument({type:"analysis",title:`${e.document_type||"Document"} Analysis`,content:e}),u.success("Analysis saved to library")}),(a=document.getElementById("export-analysis-btn"))==null||a.addEventListener("click",()=>{let n="<h1>Case Analysis Report</h1>";n+=`<div class="meta">Document Type: ${b(e.document_type||"Unknown")} | Risk Score: ${e.overall_risk_score}/100</div>`,n+='<div class="section"><div class="section-title">Key Facts</div><ul>',(e.key_facts||[]).forEach(i=>{n+=`<li>${b(i)}</li>`}),n+="</ul></div>",n+='<div class="section"><div class="section-title">Risk Assessment</div>',(e.risks||[]).forEach(i=>{n+=`<p><span class="risk-${i.level}">[${i.level.toUpperCase()}]</span> <strong>${b(i.title)}</strong> — ${b(i.description)}</p>`}),n+="</div>",n+='<div class="section"><div class="section-title">Missing Clauses</div><ul>',(e.missing_clauses||[]).forEach(i=>{n+=`<li><strong>${b(i.clause)}</strong>: ${b(i.importance)}</li>`}),n+="</ul></div>",n+='<div class="section"><div class="section-title">Recommendation</div>',n+=`<p>${b(e.recommendation||"")}</p></div>`,R(n,"Case Analysis Report",`analysis_${Date.now()}.html`),u.success("Analysis exported")})}function b(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}function _t({title:e,content:t,footer:a,maxWidth:n="540px"}){const i=document.getElementById("modal-container");if(!i)return;i.innerHTML=`
     <div class="modal-overlay" id="modal-overlay">
       <div class="modal" style="max-width: ${n}">
         <div class="modal-header">
@@ -1351,10 +1407,10 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         ${`<div class="modal-footer">${a}</div>`}
       </div>
     </div>
-  `,requestAnimationFrame(()=>{const m=document.getElementById("modal-overlay");m&&m.classList.add("visible")});const s=document.getElementById("modal-close-btn"),r=document.getElementById("modal-overlay"),o=()=>{r.classList.remove("visible"),setTimeout(()=>{i.innerHTML=""},200)};return s.addEventListener("click",o),r.addEventListener("click",m=>{m.target===r&&o()}),document.addEventListener("keydown",function m(d){d.key==="Escape"&&(o(),document.removeEventListener("keydown",m))}),o}function O(e,t="Confirm"){return new Promise(a=>{const n=kt({title:t,content:`<p style="color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;">${e}</p>`,footer:`
+  `,requestAnimationFrame(()=>{const d=document.getElementById("modal-overlay");d&&d.classList.add("visible")});const s=document.getElementById("modal-close-btn"),r=document.getElementById("modal-overlay"),o=()=>{r.classList.remove("visible"),setTimeout(()=>{i.innerHTML=""},200)};return s.addEventListener("click",o),r.addEventListener("click",d=>{d.target===r&&o()}),document.addEventListener("keydown",function d(l){l.key==="Escape"&&(o(),document.removeEventListener("keydown",d))}),o}function H(e,t="Confirm"){return new Promise(a=>{const n=_t({title:t,content:`<p style="color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;">${e}</p>`,footer:`
         <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
         <button class="btn btn-primary" id="modal-confirm">Confirm</button>
-      `});setTimeout(()=>{var i,s;(i=document.getElementById("modal-cancel"))==null||i.addEventListener("click",()=>{n(),a(!1)}),(s=document.getElementById("modal-confirm"))==null||s.addEventListener("click",()=>{n(),a(!0)})},50)})}const ue={research:{icon:"🔍",label:"Research",badgeClass:"badge-primary"},summary:{icon:"📄",label:"Summary",badgeClass:"badge-success"},draft:{icon:"✍️",label:"Draft",badgeClass:"badge-warning"},analysis:{icon:"🔬",label:"Analysis",badgeClass:"badge-danger"}};let j="all",T="";function Ct(){return`
+      `});setTimeout(()=>{var i,s;(i=document.getElementById("modal-cancel"))==null||i.addEventListener("click",()=>{n(),a(!1)}),(s=document.getElementById("modal-confirm"))==null||s.addEventListener("click",()=>{n(),a(!0)})},50)})}const he={research:{icon:"🔍",label:"Research",badgeClass:"badge-primary"},summary:{icon:"📄",label:"Summary",badgeClass:"badge-success"},draft:{icon:"✍️",label:"Draft",badgeClass:"badge-warning"},analysis:{icon:"🔬",label:"Analysis",badgeClass:"badge-danger"}};let j="all",P="";function Lt(){return`
     <div class="page-content animate-fade-up">
       <div class="page-header">
         <h2>📁 My Documents</h2>
@@ -1377,17 +1433,17 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
 
       <div id="library-content"></div>
     </div>
-  `}function Lt(){var e;q(),document.querySelectorAll("[data-filter]").forEach(t=>{t.addEventListener("click",()=>{j=t.dataset.filter,document.querySelectorAll("[data-filter]").forEach(a=>a.classList.remove("active")),t.classList.add("active"),q()})}),(e=document.getElementById("library-search-input"))==null||e.addEventListener("input",t=>{T=t.target.value.trim().toLowerCase(),q()})}function q(){const e=document.getElementById("library-content");if(!e)return;let t=l.getDocuments();if(j!=="all"&&(t=t.filter(n=>n.type===j)),T&&(t=t.filter(n=>{var i,s;return((i=n.title)==null?void 0:i.toLowerCase().includes(T))||((s=n.type)==null?void 0:s.toLowerCase().includes(T))})),t.length===0){e.innerHTML=`
+  `}function Tt(){var e;q(),document.querySelectorAll("[data-filter]").forEach(t=>{t.addEventListener("click",()=>{j=t.dataset.filter,document.querySelectorAll("[data-filter]").forEach(a=>a.classList.remove("active")),t.classList.add("active"),q()})}),(e=document.getElementById("library-search-input"))==null||e.addEventListener("input",t=>{P=t.target.value.trim().toLowerCase(),q()})}function q(){const e=document.getElementById("library-content");if(!e)return;let t=p.getDocuments();if(j!=="all"&&(t=t.filter(n=>n.type===j)),P&&(t=t.filter(n=>{var i,s;return((i=n.title)==null?void 0:i.toLowerCase().includes(P))||((s=n.type)==null?void 0:s.toLowerCase().includes(P))})),t.length===0){e.innerHTML=`
       <div class="empty-state">
         <div class="empty-state-icon">📁</div>
         <h4>No documents found</h4>
-        <p>${j!=="all"?"No documents in this category.":T?"Try a different search term.":"Start using NyayaGPT to build your document library."}</p>
+        <p>${j!=="all"?"No documents in this category.":P?"Try a different search term.":"Start using NyayaGPT to build your document library."}</p>
         <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
           <a href="#/research" class="btn btn-primary btn-sm">🔍 Start Research</a>
           <a href="#/drafts" class="btn btn-secondary btn-sm">✍️ Create Draft</a>
         </div>
       </div>
-    `;return}const a=t.map(n=>{var s;const i=ue[n.type]||{icon:"📄",label:n.type,badgeClass:"badge-info"};return`
+    `;return}const a=t.map(n=>{var s;const i=he[n.type]||{icon:"📄",label:n.type,badgeClass:"badge-info"};return`
       <tr>
         <td>
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -1422,7 +1478,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
       </table>
     </div>
     <p class="text-xs text-muted" style="margin-top: 12px;">${t.length} document${t.length!==1?"s":""}</p>
-  `,e.querySelectorAll("[data-export]").forEach(n=>{n.addEventListener("click",()=>{const i=t.find(s=>s.id===n.dataset.export);i&&Pt(i)})}),e.querySelectorAll("[data-delete]").forEach(n=>{n.addEventListener("click",async()=>{await O("Are you sure you want to delete this document? This cannot be undone.")&&(Tt(n.dataset.delete),q(),p.success("Document deleted"))})})}function Pt(e){const t=ue[e.type]||{label:"Document"};let a=`<h1>${L(e.title||"Document")}</h1>`;a+=`<div class="meta">Type: ${t.label} | Created: ${new Date(e.createdAt).toLocaleDateString("en-IN")}</div>`;const n=e.content;typeof n=="string"?a+=`<p>${L(n)}</p>`:n&&Object.entries(n).forEach(([i,s])=>{i!=="raw"&&(a+=`<div class="section"><div class="section-title">${i.replace(/_/g," ")}</div>`,Array.isArray(s)?a+=`<ul>${s.map(r=>`<li>${L(typeof r=="object"?JSON.stringify(r):r)}</li>`).join("")}</ul>`:typeof s=="object"?a+=`<pre>${L(JSON.stringify(s,null,2))}</pre>`:a+=`<p>${L(String(s))}</p>`,a+="</div>")}),D(a,e.title||"Document",`${e.type}_${Date.now()}.html`),p.success("Document exported")}function Tt(e){const t=l.getDocuments().filter(a=>a.id!==e);l.set("documents",t)}function L(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const _t=[{id:"profile",label:"Profile",icon:"👤"},{id:"api",label:"API Keys",icon:"🔑"},{id:"plan",label:"Subscription",icon:"💎"},{id:"data",label:"Data & Privacy",icon:"🔒"}];let P="profile";function Dt(){return`
+  `,e.querySelectorAll("[data-export]").forEach(n=>{n.addEventListener("click",()=>{const i=t.find(s=>s.id===n.dataset.export);i&&Pt(i)})}),e.querySelectorAll("[data-delete]").forEach(n=>{n.addEventListener("click",async()=>{await H("Are you sure you want to delete this document? This cannot be undone.")&&(Dt(n.dataset.delete),q(),u.success("Document deleted"))})})}function Pt(e){const t=he[e.type]||{label:"Document"};let a=`<h1>${L(e.title||"Document")}</h1>`;a+=`<div class="meta">Type: ${t.label} | Created: ${new Date(e.createdAt).toLocaleDateString("en-IN")}</div>`;const n=e.content;typeof n=="string"?a+=`<p>${L(n)}</p>`:n&&Object.entries(n).forEach(([i,s])=>{i!=="raw"&&(a+=`<div class="section"><div class="section-title">${i.replace(/_/g," ")}</div>`,Array.isArray(s)?a+=`<ul>${s.map(r=>`<li>${L(typeof r=="object"?JSON.stringify(r):r)}</li>`).join("")}</ul>`:typeof s=="object"?a+=`<pre>${L(JSON.stringify(s,null,2))}</pre>`:a+=`<p>${L(String(s))}</p>`,a+="</div>")}),R(a,e.title||"Document",`${e.type}_${Date.now()}.html`),u.success("Document exported")}function Dt(e){const t=p.getDocuments().filter(a=>a.id!==e);p.set("documents",t)}function L(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const Rt=[{id:"profile",label:"Profile",icon:"👤"},{id:"api",label:"API Keys",icon:"🔑"},{id:"plan",label:"Subscription",icon:"💎"},{id:"data",label:"Data & Privacy",icon:"🔒"}];let T="profile";function Nt(){return`
     <div class="page-content animate-fade-up">
       <div class="page-header">
         <h2>⚙️ Settings</h2>
@@ -1430,17 +1486,17 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
       </div>
 
       <div class="settings-layout">
-        <nav class="settings-nav">${_t.map(t=>`
-    <button class="settings-nav-item ${t.id===P?"active":""}" data-settings-tab="${t.id}">
+        <nav class="settings-nav">${Rt.map(t=>`
+    <button class="settings-nav-item ${t.id===T?"active":""}" data-settings-tab="${t.id}">
       <span>${t.icon}</span> ${t.label}
     </button>
   `).join("")}</nav>
         <div class="settings-content" id="settings-content">
-          ${ge(P)}
+          ${ve(T)}
         </div>
       </div>
     </div>
-  `}function Rt(){document.querySelectorAll("[data-settings-tab]").forEach(e=>{e.addEventListener("click",()=>{P=e.dataset.settingsTab,document.querySelectorAll("[data-settings-tab]").forEach(a=>a.classList.remove("active")),e.classList.add("active");const t=document.getElementById("settings-content");t&&(t.innerHTML=ge(P),_(P))})}),_(P)}function ge(e){switch(e){case"profile":return Nt();case"api":return U();case"plan":return ye();case"data":return Mt();default:return""}}function Nt(){const e=l.getUser()||{};return`
+  `}function zt(){document.querySelectorAll("[data-settings-tab]").forEach(e=>{e.addEventListener("click",()=>{T=e.dataset.settingsTab,document.querySelectorAll("[data-settings-tab]").forEach(a=>a.classList.remove("active")),e.classList.add("active");const t=document.getElementById("settings-content");t&&(t.innerHTML=ve(T),D(T))})}),D(T)}function ve(e){switch(e){case"profile":return Mt();case"api":return U();case"plan":return be();case"data":return Bt();default:return""}}function Mt(){const e=p.getUser()||{};return`
     <div class="settings-section">
       <h4>Personal Information</h4>
       <p>Update your profile details.</p>
@@ -1472,7 +1528,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         <button class="btn btn-primary" id="save-profile-btn">Save Changes</button>
       </div>
     </div>
-  `}function U(){const e=l.get("gemini_api_key",""),t=e?e.slice(0,8)+"•".repeat(20)+e.slice(-4):"";return`
+  `}function U(){const e=p.get("gemini_api_key",""),t=e?e.slice(0,8)+"•".repeat(20)+e.slice(-4):"";return`
     <div class="settings-section">
       <h4>🔑 Gemini API Key</h4>
       <p>NyayaGPT uses Google Gemini AI for legal research, summarization, and draft generation. You can get a free API key from Google AI Studio.</p>
@@ -1502,11 +1558,11 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
       <div style="margin-top: 20px;">
         <h5 style="margin-bottom: 8px;">Connection Status</h5>
         <div style="display: flex; align-items: center; gap: 8px;">
-          ${w()?'<div style="width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); box-shadow: 0 0 8px rgba(0,184,148,0.5);"></div><span style="color: var(--secondary);">Connected</span>':'<div style="width: 10px; height: 10px; border-radius: 50%; background: var(--warning);"></div><span style="color: var(--warning);">Demo Mode (no API key)</span>'}
+          ${S()?'<div style="width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); box-shadow: 0 0 8px rgba(0,184,148,0.5);"></div><span style="color: var(--secondary);">Connected</span>':'<div style="width: 10px; height: 10px; border-radius: 50%; background: var(--warning);"></div><span style="color: var(--warning);">Demo Mode (no API key)</span>'}
         </div>
       </div>
     </div>
-  `}function ye(){const t=(l.getUser()||{}).plan||"free";return`
+  `}function be(){const t=(p.getUser()||{}).plan||"free";return`
     <div class="settings-section">
       <h4>Subscription Plan</h4>
       <p>Manage your NyayaGPT subscription.</p>
@@ -1528,7 +1584,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         <p class="text-sm text-muted">💡 Payments will be processed via Razorpay in the next update. For now, all features are accessible for testing.</p>
       </div>
     </div>
-  `}function Mt(){const e=l.getDocuments(),t=l.getResearchHistory();return`
+  `}function Bt(){const e=p.getDocuments(),t=p.getResearchHistory();return`
     <div class="settings-section">
       <h4>Data & Privacy</h4>
       <p>Your data is stored locally in your browser. Nothing is sent to our servers.</p>
@@ -1552,7 +1608,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         </div>
       </div>
     </div>
-  `}function _(e){var t,a,n,i,s;switch(e){case"profile":(t=document.getElementById("save-profile-btn"))==null||t.addEventListener("click",()=>{var o,m,d,c,f,y,k;const r=l.getUser()||{};r.name=((m=(o=document.getElementById("settings-name"))==null?void 0:o.value)==null?void 0:m.trim())||r.name,r.email=((c=(d=document.getElementById("settings-email"))==null?void 0:d.value)==null?void 0:c.trim())||r.email,r.role=((f=document.getElementById("settings-role"))==null?void 0:f.value)||r.role,r.barCouncil=((k=(y=document.getElementById("settings-barcouncil"))==null?void 0:y.value)==null?void 0:k.trim())||"",l.setUser(r),p.success("Profile updated")});break;case"api":(a=document.getElementById("save-api-key-btn"))==null||a.addEventListener("click",()=>{var o,m;const r=(m=(o=document.getElementById("api-key-input"))==null?void 0:o.value)==null?void 0:m.trim();if(r){l.set("gemini_api_key",r),p.success("API key saved! AI features are now live.");const d=document.getElementById("settings-content");d&&(d.innerHTML=U(),_("api"))}else{l.remove("gemini_api_key"),p.info("API key removed. Running in demo mode.");const d=document.getElementById("settings-content");d&&(d.innerHTML=U(),_("api"))}});break;case"plan":document.querySelectorAll("[data-switch-plan]").forEach(r=>{r.addEventListener("click",()=>{const o=l.getUser()||{};o.plan=r.dataset.switchPlan,l.setUser(o),p.success(`Switched to ${o.plan} plan`);const m=document.getElementById("settings-content");m&&(m.innerHTML=ye(),_("plan"))})});break;case"data":(n=document.getElementById("export-all-data-btn"))==null||n.addEventListener("click",()=>{const r={user:l.getUser(),documents:l.getDocuments(),research:l.getResearchHistory(),activity:l.getActivity(),usage:l.getUsage(),exportedAt:new Date().toISOString()},o=new Blob([JSON.stringify(r,null,2)],{type:"application/json"}),m=URL.createObjectURL(o),d=document.createElement("a");d.href=m,d.download=`nyayagpt_backup_${Date.now()}.json`,d.click(),URL.revokeObjectURL(m),p.success("Data exported")}),(i=document.getElementById("clear-all-data-btn"))==null||i.addEventListener("click",async()=>{if(await O("This will delete ALL your documents, research history, and settings. This cannot be undone.")){const o=l.getUser(),m=l.get("gemini_api_key");l.clear(),o&&l.setUser(o),m&&l.set("gemini_api_key",m),p.success("All data cleared")}}),(s=document.getElementById("delete-account-btn"))==null||s.addEventListener("click",async()=>{await O("⚠️ This will permanently delete your account and ALL associated data. Are you absolutely sure?")&&(l.clear(),p.success("Account deleted"),window.location.hash="/")});break}}function G(e){return e.replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}const zt=["Public Interest Litigation Admissibility","Admissibility of electronic evidence in criminal trial","Enforceability of non-compete clauses in employment contracts","Scope of judicial review in arbitration awards","Applicability of Section 300 Clause 4 IPC"];function Bt(){return`
+  `}function D(e){var t,a,n,i,s;switch(e){case"profile":(t=document.getElementById("save-profile-btn"))==null||t.addEventListener("click",()=>{var o,d,l,c,m,f,$;const r=p.getUser()||{};r.name=((d=(o=document.getElementById("settings-name"))==null?void 0:o.value)==null?void 0:d.trim())||r.name,r.email=((c=(l=document.getElementById("settings-email"))==null?void 0:l.value)==null?void 0:c.trim())||r.email,r.role=((m=document.getElementById("settings-role"))==null?void 0:m.value)||r.role,r.barCouncil=(($=(f=document.getElementById("settings-barcouncil"))==null?void 0:f.value)==null?void 0:$.trim())||"",p.setUser(r),u.success("Profile updated")});break;case"api":(a=document.getElementById("save-api-key-btn"))==null||a.addEventListener("click",()=>{var o,d;const r=(d=(o=document.getElementById("api-key-input"))==null?void 0:o.value)==null?void 0:d.trim();if(r){p.set("gemini_api_key",r),u.success("API key saved! AI features are now live.");const l=document.getElementById("settings-content");l&&(l.innerHTML=U(),D("api"))}else{p.remove("gemini_api_key"),u.info("API key removed. Running in demo mode.");const l=document.getElementById("settings-content");l&&(l.innerHTML=U(),D("api"))}});break;case"plan":document.querySelectorAll("[data-switch-plan]").forEach(r=>{r.addEventListener("click",()=>{const o=p.getUser()||{};o.plan=r.dataset.switchPlan,p.setUser(o),u.success(`Switched to ${o.plan} plan`);const d=document.getElementById("settings-content");d&&(d.innerHTML=be(),D("plan"))})});break;case"data":(n=document.getElementById("export-all-data-btn"))==null||n.addEventListener("click",()=>{const r={user:p.getUser(),documents:p.getDocuments(),research:p.getResearchHistory(),activity:p.getActivity(),usage:p.getUsage(),exportedAt:new Date().toISOString()},o=new Blob([JSON.stringify(r,null,2)],{type:"application/json"}),d=URL.createObjectURL(o),l=document.createElement("a");l.href=d,l.download=`nyayagpt_backup_${Date.now()}.json`,l.click(),URL.revokeObjectURL(d),u.success("Data exported")}),(i=document.getElementById("clear-all-data-btn"))==null||i.addEventListener("click",async()=>{if(await H("This will delete ALL your documents, research history, and settings. This cannot be undone.")){const o=p.getUser(),d=p.get("gemini_api_key");p.clear(),o&&p.setUser(o),d&&p.set("gemini_api_key",d),u.success("All data cleared")}}),(s=document.getElementById("delete-account-btn"))==null||s.addEventListener("click",async()=>{await H("⚠️ This will permanently delete your account and ALL associated data. Are you absolutely sure?")&&(p.clear(),u.success("Account deleted"),window.location.hash="/")});break}}function G(e){return e.replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}const jt=["Public Interest Litigation Admissibility","Admissibility of electronic evidence in criminal trial","Enforceability of non-compete clauses in employment contracts","Scope of judicial review in arbitration awards","Applicability of Section 300 Clause 4 IPC"];function qt(){return`
     <div class="page-content animate-fade-up">
       <div class="page-header">
         <h2>⚖️ Precedent & Citation Finder</h2>
@@ -1565,7 +1621,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
           <div class="research-input-footer">
             <div style="display: flex; gap: 8px; align-items: center;">
               <span class="text-xs text-muted">⚡ Citation Analyzer</span>
-              ${w()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
+              ${S()?'<span class="badge badge-success">API Connected</span>':'<span class="badge badge-warning">Demo Mode</span>'}
             </div>
             <button class="btn btn-primary" id="find-citations-btn">
               <span id="find-btn-text">Find Precedents</span>
@@ -1573,13 +1629,13 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
           </div>
         </div>
         <div class="suggested-queries">
-          ${zt.map(e=>`<button class="chip" data-issue="${e}">${e}</button>`).join("")}
+          ${jt.map(e=>`<button class="chip" data-issue="${e}">${e}</button>`).join("")}
         </div>
       </div>
 
       <div id="citation-results"></div>
     </div>
-  `}function jt(){const e=document.getElementById("find-citations-btn"),t=document.getElementById("citation-query"),a=document.getElementById("citation-results");e&&e.addEventListener("click",()=>ie(t,a,e)),t&&t.addEventListener("keydown",n=>{n.key==="Enter"&&!n.shiftKey&&(n.preventDefault(),ie(t,a,e))}),document.querySelectorAll("[data-issue]").forEach(n=>{n.addEventListener("click",()=>{t.value=n.dataset.issue,t.focus()})})}async function ie(e,t,a){var i,s;const n=e.value.trim();if(!n){p.warning("Please enter a legal issue or case");return}a.disabled=!0,document.getElementById("find-btn-text").textContent="Analyzing...",t.innerHTML=qt();try{let r;w()?r=await He(n):(await new Promise(o=>setTimeout(o,2e3)),r=Ke(),p.info("Showing demo precedents. Input your Gemini API key in Settings for live lookup.")),l.incrementUsage("analyses"),l.logActivity("citation",`Citation Find: ${n.slice(0,50)}...`,"⚖️"),t.innerHTML=Gt(n,r),t.scrollIntoView({behavior:"smooth",block:"start"}),(i=document.getElementById("save-citation-btn"))==null||i.addEventListener("click",()=>{l.saveDocument({type:"citation",title:`Citations: ${n}`,content:r}),p.success("Citation report saved to library")}),(s=document.getElementById("export-citation-btn"))==null||s.addEventListener("click",()=>{J(()=>Promise.resolve().then(()=>Y),void 0).then(o=>{o.downloadAsHTML(Ht(n,r),`Citation Report: ${n}`,`citations_${Date.now()}.html`)})})}catch(r){p.error("Search failed: "+r.message),t.innerHTML=""}finally{a.disabled=!1,document.getElementById("find-btn-text").textContent="Find Precedents"}}function qt(){return`
+  `}function Gt(){const e=document.getElementById("find-citations-btn"),t=document.getElementById("citation-query"),a=document.getElementById("citation-results");e&&e.addEventListener("click",()=>ce(t,a,e)),t&&t.addEventListener("keydown",n=>{n.key==="Enter"&&!n.shiftKey&&(n.preventDefault(),ce(t,a,e))}),document.querySelectorAll("[data-issue]").forEach(n=>{n.addEventListener("click",()=>{t.value=n.dataset.issue,t.focus()})})}async function ce(e,t,a){var i,s;const n=e.value.trim();if(!n){u.warning("Please enter a legal issue or case");return}a.disabled=!0,document.getElementById("find-btn-text").textContent="Analyzing...",t.innerHTML=Ft();try{let r;S()?r=await Ye(n):(await new Promise(o=>setTimeout(o,2e3)),r=Qe(),u.info("Showing demo precedents. Input your Gemini API key in Settings for live lookup.")),p.incrementUsage("analyses"),p.logActivity("citation",`Citation Find: ${n.slice(0,50)}...`,"⚖️"),t.innerHTML=Ot(n,r),t.scrollIntoView({behavior:"smooth",block:"start"}),(i=document.getElementById("save-citation-btn"))==null||i.addEventListener("click",()=>{p.saveDocument({type:"citation",title:`Citations: ${n}`,content:r}),u.success("Citation report saved to library")}),(s=document.getElementById("export-citation-btn"))==null||s.addEventListener("click",()=>{Y(()=>Promise.resolve().then(()=>J),void 0).then(o=>{o.downloadAsHTML(Ut(n,r),`Citation Report: ${n}`,`citations_${Date.now()}.html`)})})}catch(r){u.error("Search failed: "+r.message),t.innerHTML=""}finally{a.disabled=!1,document.getElementById("find-btn-text").textContent="Find Precedents"}}function Ft(){return`
     <div class="result-section animate-fade-up" style="padding: 40px; text-align: center;">
       <div class="typing-indicator" style="justify-content: center; margin-bottom: 16px;">
         <div class="typing-dot"></div>
@@ -1588,7 +1644,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
       </div>
       <p class="text-muted">Analyzing citation network and calculating authority scores...</p>
     </div>
-  `}function Gt(e,t){const a=(t.judgments||[]).map(i=>{const s=i.citation_strength==="High"?"badge-success":i.citation_strength==="Medium"?"badge-primary":"badge-secondary";return`
+  `}function Ot(e,t){const a=(t.judgments||[]).map(i=>{const s=i.citation_strength==="High"?"badge-success":i.citation_strength==="Medium"?"badge-primary":"badge-secondary";return`
       <div class="judgment-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
           <div class="case-name" style="margin: 0; font-size: 1.0625rem;">${x(i.name)}</div>
@@ -1611,7 +1667,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
           <span class="icon">🕸️</span> Citation Network Graph
         </div>
         <div class="result-section-content" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
-          ${Ft(t.graph)}
+          ${Ht(t.graph)}
         </div>
       </div>
 
@@ -1627,7 +1683,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
         <button class="btn btn-primary btn-sm" id="save-citation-btn">💾 Save to Library</button>
       </div>
     </div>
-  `}function Ft(e){return!e||!e.nodes||!e.nodes.length?'<div class="text-muted">No connection data available</div>':`
+  `}function Ht(e){return!e||!e.nodes||!e.nodes.length?'<div class="text-muted">No connection data available</div>':`
     <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
       <div style="font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Hierarchy Citation Flow</div>
       <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
@@ -1650,7 +1706,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
   `)}
       </div>
     </div>
-  `}function Ht(e,t){var n;let a=`<h1>Citation Report: ${x(e)}</h1><div class="meta">Generated by NyayaGPT</div>`;return(n=t.judgments)!=null&&n.length&&(a+='<div class="section"><div class="section-title">Top Authority Precedents</div>',t.judgments.forEach(i=>{a+=`<p><strong>${x(i.name)}</strong> — <em>${x(i.citation)}</em> (${x(i.court)}, ${i.year})<br><strong>Strength:</strong> ${x(i.citation_strength)} | <strong>Cited count:</strong> ${i.citation_count}<br>${x(i.snippet)}</p>`}),a+="</div>"),a}function x(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}function Ot(){const e=l.getDocuments();return`
+  `}function Ut(e,t){var n;let a=`<h1>Citation Report: ${x(e)}</h1><div class="meta">Generated by NyayaGPT</div>`;return(n=t.judgments)!=null&&n.length&&(a+='<div class="section"><div class="section-title">Top Authority Precedents</div>',t.judgments.forEach(i=>{a+=`<p><strong>${x(i.name)}</strong> — <em>${x(i.citation)}</em> (${x(i.court)}, ${i.year})<br><strong>Strength:</strong> ${x(i.citation_strength)} | <strong>Cited count:</strong> ${i.citation_count}<br>${x(i.snippet)}</p>`}),a+="</div>"),a}function x(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}function Wt(){const e=p.getDocuments();return`
     <div class="page-content animate-fade-up" style="height: calc(100vh - 100px); display: flex; flex-direction: column; padding: 24px;">
       <div class="page-header" style="margin-bottom: 16px;">
         <h2>💼 Interactive Legal Workspace</h2>
@@ -1702,7 +1758,7 @@ ${Object.entries(t).map(([i,s])=>`${i.replace(/_/g," ")}: ${s}`).join(`
 
       </div>
     </div>
-  `}function Ut(){var t;const e=document.getElementById("master-scratchpad");e&&(e.value=l.get("workspace_scratchpad",""),e.addEventListener("input",()=>{l.set("workspace_scratchpad",e.value)})),document.querySelectorAll(".workspace-asset-item").forEach(a=>{a.addEventListener("click",()=>{const n=a.dataset.assetId,s=l.getDocuments().find(r=>r.id===n);s&&(Wt(s),document.querySelectorAll(".workspace-asset-item").forEach(r=>r.classList.remove("active")),a.classList.add("active"))})}),(t=document.getElementById("workspace-export-btn"))==null||t.addEventListener("click",()=>{const a=e?e.value.trim():"";if(!a){p.warning("Your scratchpad is empty");return}J(()=>Promise.resolve().then(()=>Y),void 0).then(n=>{n.downloadAsHTML(`<h2>NyayaGPT Compile Master Draft</h2><hr><p style="white-space: pre-wrap;">${v(a)}</p>`,"Workspace Master Draft",`workspace_master_${Date.now()}.html`),p.success("Workspace Master exported successfully")})})}function Wt(e){var s,r;const t=document.getElementById("inspector-placeholder"),a=document.getElementById("inspector-content");if(!t||!a)return;t.style.display="none",a.style.display="block";let n=`
+  `}function Jt(){var t;const e=document.getElementById("master-scratchpad");e&&(e.value=p.get("workspace_scratchpad",""),e.addEventListener("input",()=>{p.set("workspace_scratchpad",e.value)})),document.querySelectorAll(".workspace-asset-item").forEach(a=>{a.addEventListener("click",()=>{const n=a.dataset.assetId,s=p.getDocuments().find(r=>r.id===n);s&&(Yt(s),document.querySelectorAll(".workspace-asset-item").forEach(r=>r.classList.remove("active")),a.classList.add("active"))})}),(t=document.getElementById("workspace-export-btn"))==null||t.addEventListener("click",()=>{const a=e?e.value.trim():"";if(!a){u.warning("Your scratchpad is empty");return}Y(()=>Promise.resolve().then(()=>J),void 0).then(n=>{n.downloadAsHTML(`<h2>NyayaGPT Compile Master Draft</h2><hr><p style="white-space: pre-wrap;">${v(a)}</p>`,"Workspace Master Draft",`workspace_master_${Date.now()}.html`),u.success("Workspace Master exported successfully")})})}function Yt(e){var s,r;const t=document.getElementById("inspector-placeholder"),a=document.getElementById("inspector-content");if(!t||!a)return;t.style.display="none",a.style.display="block";let n=`
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;">
       <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${v(e.title)}</h3>
       <button class="btn btn-secondary btn-sm" id="copy-inspector-text-btn" style="padding: 4px 8px; font-size: 0.75rem;">📋 Copy Content</button>
@@ -1750,7 +1806,7 @@ Verdict: ${e.content.verdict||""}`,n+=`
           </div>
         `).join("")}
       </div>
-    `):(i=JSON.stringify(e.content),n+=`<pre style="font-size: 0.75rem;">${v(JSON.stringify(e.content,null,2))}</pre>`),a.innerHTML=n,(r=document.getElementById("copy-inspector-text-btn"))==null||r.addEventListener("click",()=>{navigator.clipboard.writeText(i).then(()=>{p.success("Asset content copied to clipboard")}).catch(()=>{p.error("Failed to copy")})})}function v(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const Yt=[{section:"MAIN"},{path:"/dashboard",icon:"📊",label:"Dashboard"},{path:"/research",icon:"🔍",label:"AI Research"},{path:"/summarizer",icon:"📄",label:"Summarizer"},{path:"/drafts",icon:"✍️",label:"Draft Generator"},{path:"/citation-finder",icon:"⚖️",label:"Citation Finder"},{path:"/workspace",icon:"💼",label:"Workspace Canvas"},{path:"/analyzer",icon:"🔬",label:"Case Analyzer"},{section:"LIBRARY"},{path:"/library",icon:"📁",label:"My Documents"},{section:"ACCOUNT"},{path:"/settings",icon:"⚙️",label:"Settings"}];function Jt(){const e=l.get("sidebar_collapsed",!1),t=g.getCurrentPath(),a=Yt.map(n=>{if(n.section)return`<div class="sidebar-section-title">${n.section}</div>`;const i=t===n.path;return`
+    `):(i=JSON.stringify(e.content),n+=`<pre style="font-size: 0.75rem;">${v(JSON.stringify(e.content,null,2))}</pre>`),a.innerHTML=n,(r=document.getElementById("copy-inspector-text-btn"))==null||r.addEventListener("click",()=>{navigator.clipboard.writeText(i).then(()=>{u.success("Asset content copied to clipboard")}).catch(()=>{u.error("Failed to copy")})})}function v(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}const Kt=[{section:"MAIN"},{path:"/dashboard",icon:"📊",label:"Dashboard"},{path:"/research",icon:"🔍",label:"AI Research"},{path:"/summarizer",icon:"📄",label:"Summarizer"},{path:"/drafts",icon:"✍️",label:"Draft Generator"},{path:"/citation-finder",icon:"⚖️",label:"Citation Finder"},{path:"/workspace",icon:"💼",label:"Workspace Canvas"},{path:"/analyzer",icon:"🔬",label:"Case Analyzer"},{section:"LIBRARY"},{path:"/library",icon:"📁",label:"My Documents"},{section:"ACCOUNT"},{path:"/settings",icon:"⚙️",label:"Settings"}];function Vt(){const e=p.get("sidebar_collapsed",!1),t=y.getCurrentPath(),a=Kt.map(n=>{if(n.section)return`<div class="sidebar-section-title">${n.section}</div>`;const i=t===n.path;return`
       <a href="#${n.path}" class="sidebar-link ${i?"active":""}" data-route="${n.path}">
         <span class="sidebar-link-icon">${n.icon}</span>
         <span class="sidebar-label">${n.label}</span>
@@ -1778,7 +1834,7 @@ Verdict: ${e.content.verdict||""}`,n+=`
         </div>
       </div>
     </aside>
-  `}function Kt(){const e=document.getElementById("sidebar-toggle");e&&e.addEventListener("click",()=>{const t=document.getElementById("sidebar"),a=document.querySelector(".main-content"),n=t.classList.toggle("collapsed");l.set("sidebar_collapsed",n),a&&a.classList.toggle("sidebar-collapsed",n),e.textContent=n?"▶":"◀"})}function Vt(e){document.querySelectorAll(".sidebar-link").forEach(t=>{const a=t.getAttribute("data-route");t.classList.toggle("active",a===e)})}const Xt={"/dashboard":{breadcrumb:"Home",title:"Dashboard"},"/research":{breadcrumb:"Tools",title:"AI Research"},"/summarizer":{breadcrumb:"Tools",title:"Summarizer"},"/drafts":{breadcrumb:"Tools",title:"Draft Generator"},"/analyzer":{breadcrumb:"Tools",title:"Case Analyzer"},"/library":{breadcrumb:"Library",title:"My Documents"},"/settings":{breadcrumb:"Account",title:"Settings"}};function Qt(e){const t=l.getUser(),a=Xt[e]||{breadcrumb:"Home",title:"Dashboard"},n=t!=null&&t.name?t.name.split(" ").map(i=>i[0]).join("").toUpperCase().slice(0,2):"U";return`
+  `}function Qt(){const e=document.getElementById("sidebar-toggle");e&&e.addEventListener("click",()=>{const t=document.getElementById("sidebar"),a=document.querySelector(".main-content"),n=t.classList.toggle("collapsed");p.set("sidebar_collapsed",n),a&&a.classList.toggle("sidebar-collapsed",n),e.textContent=n?"▶":"◀"})}function Xt(e){document.querySelectorAll(".sidebar-link").forEach(t=>{const a=t.getAttribute("data-route");t.classList.toggle("active",a===e)})}const Zt={"/dashboard":{breadcrumb:"Home",title:"Dashboard"},"/research":{breadcrumb:"Tools",title:"AI Research"},"/summarizer":{breadcrumb:"Tools",title:"Summarizer"},"/drafts":{breadcrumb:"Tools",title:"Draft Generator"},"/analyzer":{breadcrumb:"Tools",title:"Case Analyzer"},"/library":{breadcrumb:"Library",title:"My Documents"},"/settings":{breadcrumb:"Account",title:"Settings"}};function en(e){const t=p.getUser(),a=Zt[e]||{breadcrumb:"Home",title:"Dashboard"},n=t!=null&&t.name?t.name.split(" ").map(i=>i[0]).join("").toUpperCase().slice(0,2):"U";return`
     <header class="topbar">
       <div class="topbar-left">
         <button class="topbar-icon-btn" id="mobile-menu-btn" style="display:none">☰</button>
@@ -1804,13 +1860,13 @@ Verdict: ${e.content.verdict||""}`,n+=`
         </div>
       </div>
     </header>
-  `}function Zt(){const e=document.getElementById("mobile-menu-btn");e&&(window.innerWidth<=1024&&(e.style.display="flex"),e.addEventListener("click",()=>{const a=document.getElementById("sidebar");a&&a.classList.toggle("mobile-open")}));const t=document.getElementById("topbar-avatar");t&&t.addEventListener("click",()=>{window.location.hash="/settings"}),window.addEventListener("resize",()=>{const a=document.getElementById("mobile-menu-btn");a&&(a.style.display=window.innerWidth<=1024?"flex":"none")})}function E(e,t){const a=document.getElementById("app"),n=l.get("sidebar_collapsed",!1);a.innerHTML=`
-    ${Jt()}
+  `}function tn(){const e=document.getElementById("mobile-menu-btn");e&&(window.innerWidth<=1024&&(e.style.display="flex"),e.addEventListener("click",()=>{const a=document.getElementById("sidebar");a&&a.classList.toggle("mobile-open")}));const t=document.getElementById("topbar-avatar");t&&t.addEventListener("click",()=>{window.location.hash="/settings"}),window.addEventListener("resize",()=>{const a=document.getElementById("mobile-menu-btn");a&&(a.style.display=window.innerWidth<=1024?"flex":"none")})}function E(e,t){const a=document.getElementById("app"),n=p.get("sidebar_collapsed",!1);a.innerHTML=`
+    ${Vt()}
     <div class="main-content ${n?"sidebar-collapsed":""}">
-      ${Qt(e)}
+      ${en(e)}
       ${t}
     </div>
-  `,Kt(),Zt(),Vt(e)}function F(e){const t=document.getElementById("app");t.innerHTML=e}function I(e){return l.isLoggedIn()?!0:(g.navigate("/login"),!1)}g.register("/",()=>{if(l.isLoggedIn()){g.navigate("/dashboard");return}F(fe()),he()});g.register("/login",()=>{if(l.isLoggedIn()){g.navigate("/dashboard");return}F(xe()),Ae()});g.register("/signup",()=>{if(l.isLoggedIn()){g.navigate("/dashboard");return}F(we()),Se()});g.register("/dashboard",e=>{I()&&E(e,ke())});g.register("/research",e=>{I()&&(E(e,Qe()),Ze())});g.register("/summarizer",e=>{I()&&(E(e,ot()),lt())});g.register("/drafts",e=>{I()&&(E(e,yt()),vt())});g.register("/analyzer",e=>{I()&&(E(e,At()),St())});g.register("/citation-finder",e=>{I()&&(E(e,Bt()),jt())});g.register("/workspace",e=>{I()&&(E(e,Ot()),Ut())});g.register("/library",e=>{I()&&(E(e,Ct()),Lt())});g.register("/settings",e=>{I()&&(E(e,Dt()),Rt())});g.register("/logout",()=>{l.logout(),g.navigate("/")});g.register("/404",()=>{F(`
+  `,Qt(),tn(),Xt(e)}function F(e){const t=document.getElementById("app");t.innerHTML=e}function k(e){return p.isLoggedIn()?!0:(y.navigate("/login"),!1)}y.register("/",()=>{if(p.isLoggedIn()){y.navigate("/dashboard");return}F(we()),Ae()});y.register("/login",()=>{if(p.isLoggedIn()){y.navigate("/dashboard");return}F($e()),Ee()});y.register("/signup",()=>{if(p.isLoggedIn()){y.navigate("/dashboard");return}F(Ie()),ke()});y.register("/dashboard",e=>{k()&&E(e,Te())});y.register("/research",e=>{k()&&(E(e,et()),tt())});y.register("/summarizer",e=>{k()&&(E(e,ct()),dt())});y.register("/drafts",e=>{k()&&(E(e,ht()),vt())});y.register("/analyzer",e=>{k()&&(E(e,$t()),It())});y.register("/citation-finder",e=>{k()&&(E(e,qt()),Gt())});y.register("/workspace",e=>{k()&&(E(e,Wt()),Jt())});y.register("/library",e=>{k()&&(E(e,Lt()),Tt())});y.register("/settings",e=>{k()&&(E(e,Nt()),zt())});y.register("/logout",()=>{p.logout(),y.navigate("/")});y.register("/404",()=>{F(`
     <div class="auth-page">
       <div class="auth-card animate-scale-in" style="text-align: center;">
         <div style="font-size: 4rem; margin-bottom: 16px;">🔍</div>
@@ -1819,4 +1875,4 @@ Verdict: ${e.content.verdict||""}`,n+=`
         <a href="#/" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
       </div>
     </div>
-  `)});document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key==="k"&&(e.preventDefault(),l.isLoggedIn())){const t=document.getElementById("topbar-search");t&&t.click()}});window.navigateTo=e=>{g.navigate(e)};console.log("%c⚖️ NyayaGPT","font-size: 24px; font-weight: bold; color: #6C5CE7;");console.log("%cAI-Powered Legal Intelligence for Indian Law","font-size: 12px; color: #8888A8;");g.start();
+  `)});document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key==="k"&&(e.preventDefault(),p.isLoggedIn())){const t=document.getElementById("topbar-search");t&&t.click()}});window.navigateTo=e=>{y.navigate(e)};console.log("%c⚖️ NyayaGPT","font-size: 24px; font-weight: bold; color: #6C5CE7;");console.log("%cAI-Powered Legal Intelligence for Indian Law","font-size: 12px; color: #8888A8;");y.start();

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { storage } from '../utils/storage.js';
+import { classifyQueryHeuristic, searchLegalDB } from './legal_db.js';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL = 'gemini-2.0-flash';
@@ -58,29 +59,36 @@ async function callGemini(prompt, systemInstruction = '') {
   try {
     return JSON.parse(text);
   } catch {
-    // Try extracting JSON from markdown code blocks
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[1].trim());
     }
-    // Return as plain text wrapped in object
     return { raw: text };
   }
 }
 
-// ── Research API ────────────────────────────────────────────
+// ── Query Classifier & RAG Workflow ──────────────────────────
 
-const RESEARCH_SYSTEM = `You are NyayaGPT, an expert Indian legal research assistant. You have extensive knowledge of Indian law including all Acts, Sections, IPC, CrPC, CPC, Constitution of India, Supreme Court judgments, and High Court judgments.
-
-When given a legal query, respond in this EXACT JSON format:
+const CLASSIFICATION_SYSTEM = `Analyze the user's input. Identify if this query is asking for Indian legal advice, statutory codes, sections, court judgments, precedents, or other legal information.
+Respond in this EXACT JSON format:
 {
+  "is_legal": true
+}`;
+
+const RESEARCH_SYSTEM = `You are NyayaGPT, an expert Indian legal research assistant. You search court records and acts to ground your answers.
+If no relevant Indian statutes or judgments are found, set "sources_found" to false.
+
+Respond in this EXACT JSON format:
+{
+  "sources_found": true,
   "acts": [
     { "name": "Act Name", "section": "Section Number", "description": "Brief explanation of relevance" }
   ],
   "judgments": [
-    { "name": "Case Name v. Other Party", "citation": "(Year) Volume SCC/AIR Page", "court": "Supreme Court / High Court Name", "year": "Year", "relevance": 85, "snippet": "Key excerpt or ratio decidendi" }
+    { "name": "Case Name v. Other Party", "citation": "(Year) Volume SCC/AIR Page", "court": "Supreme Court / High Court Name", "year": "Year", "relevance": 95, "snippet": "Key excerpt or ratio" }
   ],
-  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above. Use proper legal language.",
+  "reasoning_summary": "Brief summary of AI's search and analytical logic (1-2 sentences)",
+  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above.",
   "confidence_score": 95,
   "timeline": [
     { "year": "Year", "event": "Precedent established or statutory change" }
@@ -92,20 +100,14 @@ When given a legal query, respond in this EXACT JSON format:
     "Suggested question 1",
     "Suggested question 2"
   ]
-}
-
-Rules:
-- Always provide 2-5 relevant Acts/Sections
-- Always provide 2-4 relevant judgments with proper citations
-- Relevance score is 0-100
-- Analysis should be comprehensive, citing specific sections and cases
-- Focus on Indian law only
-- Include landmark/leading cases where applicable`;
+}`;
 
 const DEEP_RESEARCH_SYSTEM = `You are NyayaGPT, a senior legal researcher in India. Perform a deep multi-step legal analysis and return a comprehensive legal memorandum.
+If no relevant Indian statutes or judgments are found, set "sources_found" to false.
 
 Respond in this EXACT JSON format:
 {
+  "sources_found": true,
   "issue_summary": "Summary of the legal issue(s)",
   "applicable_laws": [
     { "act": "Act Name", "section": "Section Code", "description": "Relevance" }
@@ -113,11 +115,23 @@ Respond in this EXACT JSON format:
   "judgments": [
     { "name": "Case Name", "citation": "Citation", "court": "Court", "year": "Year", "strength": 90, "snippet": "Ratio/summary" }
   ],
+  "reasoning_summary": "Brief summary of AI's search and analytical logic (1-2 sentences)",
   "arguments_for": ["Argument 1", "Argument 2"],
   "arguments_against": ["Argument 1", "Argument 2"],
   "potential_risks": ["Risk 1", "Risk 2"],
+  "analysis": "Detailed legal analysis of the memorandum.",
   "conclusion": "Final detailed research memo conclusion",
-  "confidence_score": 95
+  "confidence_score": 95,
+  "timeline": [
+    { "year": "Year", "event": "Precedent established or statutory change" }
+  ],
+  "related_cases": [
+    { "name": "Case Name", "citation": "Citation", "court": "Court" }
+  ],
+  "follow_ups": [
+    "Suggested question 1",
+    "Suggested question 2"
+  ]
 }`;
 
 const GENERAL_AI_SYSTEM = `You are a helpful AI assistant. Answer the user's question clearly. Return the answer in this JSON format:
@@ -125,22 +139,100 @@ const GENERAL_AI_SYSTEM = `You are a helpful AI assistant. Answer the user's que
   "answer": "Your detailed answer here"
 }`;
 
-export async function researchQuery(query, mode = 'legal') {
-  if (mode === 'deep') {
-    return callGemini(
-      `Perform a deep multi-step legal research memo for: "${query}"`,
-      DEEP_RESEARCH_SYSTEM
-    );
-  } else if (mode === 'general') {
-    return callGemini(
-      `Answer this question: "${query}"`,
-      GENERAL_AI_SYSTEM
-    );
+export async function processQueryWorkflow(query, mode = 'legal') {
+  const apiKey = getApiKey();
+  
+  try {
+    const res = await fetch('/api/research', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': apiKey ? `Bearer ${apiKey}` : ''
+      },
+      body: JSON.stringify({ query, mode })
+    });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+    const errData = await res.json().catch(() => ({}));
+    console.warn('[AI Service] Backend API returned error, running client RAG fallback:', errData.error);
+  } catch (err) {
+    console.warn('[AI Service] Backend API unreachable, running client RAG fallback:', err.message);
+  }
+
+  // Client-side fallback if backend fails or is unreachable
+  return executeClientRAGWorkflow(query, mode, apiKey);
+}
+
+async function executeClientRAGWorkflow(query, mode, apiKey) {
+  // Step 1: Classifier
+  let isLegal = false;
+  if (apiKey) {
+    try {
+      const classification = await callGemini(
+        `Analyze user query: "${query}"`,
+        CLASSIFICATION_SYSTEM
+      );
+      isLegal = !!classification.is_legal;
+    } catch {
+      isLegal = classifyQueryHeuristic(query).is_legal;
+    }
   } else {
-    return callGemini(
-      `Legal research query: "${query}"\n\nProvide a comprehensive legal research response with relevant Indian Acts, Sections, judgments, and analysis.`,
-      RESEARCH_SYSTEM
-    );
+    isLegal = classifyQueryHeuristic(query).is_legal;
+  }
+
+  // Step 2: Routing
+  if (isLegal) {
+    const ragResults = searchLegalDB(query);
+    
+    if (apiKey) {
+      const contextStr = JSON.stringify(ragResults);
+      if (ragResults.sources_found) {
+        const systemInstruction = mode === 'deep' ? DEEP_RESEARCH_SYSTEM : RESEARCH_SYSTEM;
+        const prompt = `User Query: "${query}"\n\nRetrieved Legal Context:\n${contextStr}\n\nBased on the retrieved acts and judgments, generate the legal answer/memorandum. Strictly align with the required JSON structure.`;
+        const response = await callGemini(prompt, systemInstruction);
+        return {
+          is_legal: true,
+          query,
+          sources_found: true,
+          ...response,
+          graph: ragResults.graph
+        };
+      } else {
+        const systemInstruction = mode === 'deep' ? DEEP_RESEARCH_SYSTEM : RESEARCH_SYSTEM;
+        const prompt = `User Query: "${query}"\n\nNote: No specific matches were found in the local legal database. Perform general legal reasoning to analyze and answer the query. Set "sources_found" to false in your JSON.`;
+        const response = await callGemini(prompt, systemInstruction);
+        return {
+          is_legal: true,
+          query,
+          sources_found: false,
+          ...response
+        };
+      }
+    } else {
+      // Dynamic local mock fallback
+      return clientSideMockResponse(query, mode, ragResults);
+    }
+  } else {
+    if (apiKey) {
+      const response = await callGemini(
+        `Answer general query: "${query}"`,
+        GENERAL_AI_SYSTEM
+      );
+      return {
+        is_legal: false,
+        query,
+        answer: response.answer
+      };
+    } else {
+      const fallbackText = `General Assistant (Demo Mode): You asked: "${query}".\n\nThis query is classified as a general (non-legal) prompt. To get full generative answers, please connect your Gemini API Key in the Settings panel.`;
+      return {
+        is_legal: false,
+        query,
+        answer: fallbackText
+      };
+    }
   }
 }
 
@@ -171,7 +263,7 @@ Rules:
 - Key takeaways should be practical and actionable`;
 
 export async function summarizeJudgment(text) {
-  const truncated = text.slice(0, 30000); // Token limit safety
+  const truncated = text.slice(0, 30000);
   return callGemini(
     `Summarize the following Indian court judgment:\n\n---\n${truncated}\n---\n\nProvide a structured summary.`,
     SUMMARIZER_SYSTEM
@@ -414,129 +506,135 @@ export async function findCitations(query) {
   );
 }
 
-// ── Deep Research API ───────────────────────────────────────
-
-export async function deepResearch(query) {
-  return callGemini(
-    `Perform an exhaustive legal research on: "${query}". Provide a comprehensive analysis including applicable acts, relevant landmark judgments, potential risks, and a concluding opinion.`,
-    "You are NyayaGPT, an expert Indian legal researcher. Provide deep, thorough, and highly accurate analysis."
-  );
-}
-
-// ── General AI API ──────────────────────────────────────────
-
-export async function generalAssistant(query) {
-  return callGemini(
-    query,
-    "You are NyayaGPT, a helpful assistant. Provide concise and accurate answers."
-  );
-}
-
 // ── Demo/Mock Data ──────────────────────────────────────────
 
-export function getMockDeepResearchResult() {
-  return {
-    issue_summary: "Criminal liability of a non-executive independent director in cheque bounce cases under Section 138 of the Negotiable Instruments Act, 1881.",
-    applicable_laws: [
-      { act: "Negotiable Instruments Act, 1881", section: "Section 138", description: "Dishonour of cheque for insufficiency, etc., of funds in the account." },
-      { act: "Negotiable Instruments Act, 1881", section: "Section 141", description: "Offences by companies and liability of directors/officers in charge of daily affairs." },
-      { act: "Companies Act, 2013", section: "Section 149(12)", description: "Limitation of liability of independent and non-executive directors." }
-    ],
-    judgments: [
-      { name: "S.M.S. Pharmaceuticals Ltd. v. Neeta Bhalla", citation: "(2005) 8 SCC 89", court: "Supreme Court of India", year: "2005", strength: 98, snippet: "Established that a clear statement must be made in the complaint showing the director was in charge of and responsible for the company's daily conduct." },
-      { name: "Pooja Ravinder Devidasani v. State of Maharashtra", citation: "AIR 2015 SC 675", court: "Supreme Court of India", year: "2014", strength: 95, snippet: "Held that non-executive directors cannot be held liable under Section 138 merely by virtue of holding a designation, without specific overt acts showing operational control." },
-      { name: "KK Ahuja v. V.K. Vora", citation: "(2009) 10 SCC 48", court: "Supreme Court of India", year: "2009", strength: 89, snippet: "Clarified the roles of Managing Directors, Directors, and Officers, reiterating that only those participating in everyday commercial actions are criminally liable." }
-    ],
-    arguments_for: [
-      "The director is designated as a non-executive/independent director and does not draw operational salary.",
-      "The Board resolution files prove the director has no signing authority on the bank accounts of the company.",
-      "No specific averment is present in the complaint detailing the active involvement of the director in issuing the check."
-    ],
-    arguments_against: [
-      "The complainant argues that all directors are collectively liable for company debts under statutory guidelines.",
-      "The name of the director appears on the official company letterhead as an active advisor."
-    ],
-    potential_risks: [
-      "Initial summon proceedings might still require the director to appear and file for quashing under Section 482 CrPC.",
-      "Vaguely worded complaint drafts might delay discharge if operational participation is deemed an issue of trial evidence."
-    ],
-    conclusion: "Under Indian jurisprudence, specifically Section 141 of the NI Act and Section 149(12) of the Companies Act, a non-executive independent director cannot be held criminally liable for cheque bounce offences unless there is a clear, specific, and operational allegation showing they were in charge of the company's day-to-day affairs at the time of the offence. The landmark ruling in S.M.S. Pharmaceuticals and Pooja Ravinder Devidasani provides complete protection, allowing the director to seek quashing of summons from the High Court under Section 482 of the CrPC/BNS.",
-    confidence_score: 95
-  };
-}
+function clientSideMockResponse(query, mode, ragResults) {
+  const queryWords = query.split(/\s+/).filter(w => w.length > 3).slice(0, 5).join(' ');
+  const displaySubject = queryWords ? `"${queryWords}"` : `your request`;
+  
+  if (!ragResults.sources_found) {
+    return {
+      is_legal: true,
+      query,
+      sources_found: false,
+      reasoning_summary: `Scanned statutory databases for ${displaySubject}, but found no direct references.`,
+      analysis: `We did not locate specific statutory sections or judgments directly matching: "${query}".\n\nGeneral legal reasoning indicates that this issue is likely governed by general principles of Indian civil/criminal law. In legal practice, a matter of this nature would require checking procedural details and state-specific amendments.\n\n[DEMO MODE] Connect your Gemini API key in Settings to search the live indexes.`,
+      confidence_score: 45,
+      timeline: [],
+      related_cases: [],
+      follow_ups: [
+        'How does Indian contract law apply generally here?',
+        'Specify another act or section to narrow down search.'
+      ]
+    };
+  }
 
-export function getMockGeneralAIResult() {
+  const acts = ragResults.acts;
+  const judgments = ragResults.judgments;
+  const mainAct = acts[0] || { name: 'Indian Statutes', section: 'applicable rules' };
+  const mainJudgment = judgments[0] || { name: 'landmark precedents', citation: '' };
+
+  if (mode === 'deep') {
+    return {
+      is_legal: true,
+      query,
+      sources_found: true,
+      issue_summary: `Legal issue regarding ${displaySubject} under the provisions of ${mainAct.name}.`,
+      applicable_laws: acts.map(a => ({ act: a.name, section: a.section, description: a.description })),
+      judgments: judgments.map(j => ({ name: j.name, citation: j.citation, court: j.court, year: j.year, strength: 90, snippet: j.snippet })),
+      reasoning_summary: `Identified key statutes: ${acts.map(a => a.section).join(', ')}. Analyzed precedent in ${mainJudgment.name}.`,
+      arguments_for: [
+        `Compliance with the express wording of ${mainAct.section} protects the applicant's rights.`,
+        `The ratio decidendi in ${mainJudgment.name} supports a favorable interpretation of this dispute.`
+      ],
+      arguments_against: [
+        `Opposing counsel might argue lack of strict procedural adherence.`,
+        `Factual distinctions could limit the direct binding value of ${mainJudgment.name}.`
+      ],
+      potential_risks: [
+        `Risk of civil litigation delays under Section 73 Contract Act.`,
+        `Evidence collection burden to establish intention/consent.`
+      ],
+      analysis: `A detailed analysis of ${displaySubject} under Indian jurisprudence reveals strong grounding under ${mainAct.name}, ${mainAct.section}.\n\nAccording to ${mainAct.section}: "${mainAct.description}". This provision establishes the legal framework governing the transaction.\n\nFurthermore, the Supreme Court of India in ${mainJudgment.name} (${mainJudgment.citation}) held that: "${mainJudgment.snippet}". This precedent binds subordinate courts and outlines the criteria that must be satisfied to establish liability or seek relief.\n\n[DEMO MODE] This memorandum has been dynamically generated from offline indexes. To generate professional, comprehensive summaries via LLM, please configure your Gemini API Key in settings.`,
+      conclusion: `Based on the statutory rules of ${mainAct.section} and precedents like ${mainJudgment.name}, there is a viable case here, provided proper notices have been served.`,
+      confidence_score: 85,
+      timeline: ragResults.timeline,
+      related_cases: judgments.slice(1).map(j => ({ name: j.name, citation: j.citation, court: j.court })),
+      follow_ups: [
+        `What are the specific filings required under ${mainAct.name}?`,
+        `How does the ruling in ${mainJudgment.name} apply to corporate bodies?`
+      ],
+      graph: ragResults.graph
+    };
+  }
+
   return {
-    answer: "To run a background task in a Node.js server, you can use built-in mechanisms like child processes or worker threads for CPU-heavy tasks. For robust, production-grade applications, it is highly recommended to use message queues like BullMQ (redis-backed), Agenda (mongodb-backed), or Celery (if working in a python stack). These allow you to schedule, monitor, and scale background processing nodes independently from your main HTTP router nodes."
+    is_legal: true,
+    query,
+    sources_found: true,
+    acts: acts.map(a => ({ name: a.name, section: a.section, description: a.description })),
+    judgments: judgments.map(j => ({ name: j.name, citation: j.citation, court: j.court, year: j.year, relevance: j.relevance, snippet: j.snippet })),
+    reasoning_summary: `Found statutory grounding in ${mainAct.name} (${mainAct.section}) and judicial authorities including ${mainJudgment.name}.`,
+    analysis: `In relation to your query on ${displaySubject}, the primary statutory provision is ${mainAct.section} of the ${mainAct.name}, which states that ${mainAct.description}.\n\nThis is reinforced by judicial precedents. Specifically, in ${mainJudgment.name} (${mainJudgment.citation}), the ${mainJudgment.court} established that ${mainJudgment.snippet}.\n\nIf you are drafting pleadings or advising a client, ensure that all the key ingredients of ${mainAct.section} are documented. For example, if there is a claim under Section 138 of the NI Act, verify the 30-day notice timeline.\n\n[DEMO MODE] Dynamically retrieved from local knowledge indexes. Configure your Gemini API Key in Settings to enable real-time web-connected legal analysis.`,
+    confidence_score: 80,
+    timeline: ragResults.timeline,
+    related_cases: judgments.slice(1).map(j => ({ name: j.name, citation: j.citation, court: j.court })),
+    follow_ups: [
+      `What is the limitation period under ${mainAct.name}?`,
+      `How to draft a legal notice citing ${mainJudgment.name}?`
+    ],
+    graph: ragResults.graph
   };
 }
 
 export function getMockResearchResult() {
   return {
     acts: [
-      { name: 'Indian Penal Code, 1860', section: 'Section 498A', description: 'Husband or relative of husband of a woman subjecting her to cruelty — Punishment with imprisonment up to 3 years and fine.' },
-      { name: 'Hindu Marriage Act, 1955', section: 'Section 13', description: 'Grounds for divorce including cruelty, desertion, conversion, unsoundness of mind, venereal disease, renunciation, and presumption of death.' },
-      { name: 'Protection of Women from Domestic Violence Act, 2005', section: 'Section 3', description: 'Defines domestic violence including physical, sexual, verbal, emotional, and economic abuse.' },
+      { name: 'Indian Penal Code, 1860', section: 'Section 498A', description: 'Husband or relative of husband of a woman subjecting her to cruelty.' },
+      { name: 'Hindu Marriage Act, 1955', section: 'Section 13', description: 'Grounds for divorce.' }
     ],
     judgments: [
-      { name: 'Arnesh Kumar v. State of Bihar', citation: '(2014) 8 SCC 273', court: 'Supreme Court of India', year: '2014', relevance: 95, snippet: 'The Supreme Court laid down guidelines to prevent automatic arrests in cases under Section 498A IPC, requiring the police to follow a checklist before making arrests.' },
-      { name: 'Rajesh Sharma v. State of U.P.', citation: '(2017) 10 SCC 257', court: 'Supreme Court of India', year: '2017', relevance: 88, snippet: 'Directed establishment of Family Welfare Committees in every district to look into complaints of matrimonial disputes and recommend settlement.' },
-      { name: 'Shobha Rani v. Madhukar Reddi', citation: '(1988) 1 SCC 105', court: 'Supreme Court of India', year: '1988', relevance: 78, snippet: 'Defined cruelty broadly to include both physical and mental cruelty, establishing that persistent demands for dowry constitute cruelty under Section 498A.' },
+      { name: 'Arnesh Kumar v. State of Bihar', citation: '(2014) 8 SCC 273', court: 'Supreme Court of India', year: '2014', relevance: 95, snippet: 'Safeguards against automatic arrest.' }
     ],
-    analysis: 'Based on the legal research, Section 498A of the Indian Penal Code is the primary provision dealing with cruelty by husband or his relatives against a married woman. This section was introduced by the Criminal Law (Second Amendment) Act, 1983, to combat the increasing menace of dowry deaths and domestic violence.\n\nThe Supreme Court in Arnesh Kumar v. State of Bihar (2014) 8 SCC 273 recognized the potential misuse of Section 498A and laid down important safeguards, including a mandatory checklist for police officers before arrest. This judgment was a landmark in balancing the protection of women with prevention of misuse.\n\nIn addition to criminal remedies under Section 498A IPC, the Protection of Women from Domestic Violence Act, 2005 provides civil remedies including protection orders, residence orders, monetary relief, and custody orders. Section 13 of the Hindu Marriage Act, 1955 allows divorce on grounds of cruelty, providing a matrimonial remedy alongside criminal provisions.',
+    analysis: 'Cruelty by husband or relatives is governed by Section 498A of the IPC (and equivalent BNS sections). The Supreme Court has laid down checklists to prevent misuse of this section.',
     confidence_score: 92,
     timeline: [
-      { year: '1983', event: 'Section 498A added to IPC by Criminal Law Amendment Act.' },
-      { 'year': '1988', event: 'Supreme Court defines physical and mental cruelty in Shobha Rani case.' },
-      { year: '2005', event: 'Protection of Women from Domestic Violence Act enacted.' },
-      { year: '2014', event: 'Arnesh Kumar guidelines issued to prevent automatic arrests.' }
+      { year: '1983', event: 'Section 498A added to IPC.' },
+      { year: '2014', event: 'Arnesh Kumar guidelines issued.' }
     ],
     related_cases: [
-      { name: 'Preeti Gupta v. State of Jharkhand', citation: '(2010) 7 SCC 667', court: 'Supreme Court of India' },
-      { name: 'Sushil Kumar Sharma v. Union of India', citation: '(2005) 6 SCC 281', court: 'Supreme Court of India' }
+      { name: 'Preeti Gupta v. State of Jharkhand', citation: '(2010) 7 SCC 667', court: 'Supreme Court of India' }
     ],
     follow_ups: [
-      'What are the guidelines for registering FIR in matrimonial disputes?',
-      'How to apply for anticipatory bail in a Section 498A case?',
-      'Are there amendments proposed for BNS regarding domestic violence?'
+      'What are the guidelines for registering matrimonial FIRs?',
+      'How to obtain anticipatory bail in 498A?'
     ]
   };
 }
 
-export function getMockSummary() {
+export function getMockDeepResearchResult() {
   return {
-    title: 'Arnesh Kumar v. State of Bihar',
-    court: 'Supreme Court of India',
-    date: '2 July 2014',
-    facts: [
-      'The appellant was arrested under Section 498A IPC without proper investigation',
-      'The case highlighted the growing concern of mechanical arrests in matrimonial disputes',
-      'Police had arrested the accused without following proper procedure or assessing necessity of arrest',
+    is_legal: true,
+    sources_found: true,
+    issue_summary: "Cheque bounce operational checks under Section 138 NI Act.",
+    applicable_laws: [
+      { act: 'Negotiable Instruments Act, 1881', section: 'Section 138', description: 'Liability for check bounce.' }
     ],
-    issues: [
-      'Whether automatic arrest under Section 498A IPC is mandatory',
-      'What safeguards should be in place to prevent misuse of Section 498A',
-      'Whether the Magistrate should apply judicial mind before authorizing detention',
+    judgments: [
+      { name: 'S.M.S. Pharmaceuticals Ltd. v. Neeta Bhalla', citation: '(2005) 8 SCC 89', court: 'Supreme Court of India', year: '2005', strength: 95, snippet: 'Director operational control requirement.' }
     ],
-    petitioner_arguments: [
-      'Section 498A is being widely misused as a tool for harassment',
-      'Automatic arrests violate fundamental rights under Article 21',
-      'Police should be required to investigate before making arrests',
-    ],
-    respondent_arguments: [
-      'Section 498A is necessary to protect women from domestic violence',
-      'Arrests are needed to prevent accused from influencing witnesses',
-      'The provision serves an important social purpose',
-    ],
-    court_reasoning: 'The Supreme Court acknowledged that while Section 498A serves a vital purpose in protecting women from cruelty, its misuse cannot be ignored. The Court noted that in many cases, arrests were made mechanically without proper application of mind. The Court held that police officers must satisfy themselves about the necessity of arrest under Section 41 CrPC and prepare a checklist of reasons for arrest.',
-    verdict: 'The Supreme Court directed all State Governments to instruct police officers not to automatically arrest the accused in Section 498A cases. Police must follow the checklist under Section 41(1)(b)(ii) CrPC. Magistrates must not authorize detention casually and must satisfy themselves that the arrest is warranted.',
-    key_takeaways: [
-      'Police cannot make automatic arrests in Section 498A cases',
-      'A checklist must be prepared justifying the arrest',
-      'Magistrates must apply judicial mind before authorizing detention',
-      'Non-compliance may lead to departmental action against police officers',
-      'This judgment balances protection of women with prevention of misuse',
-    ],
+    arguments_for: ["Director not involved in operational check signatures."],
+    arguments_against: ["Name present on letters."],
+    potential_risks: ["Delay of summons quashing."],
+    analysis: "Under Section 138 NI Act, criminal summons require clear operational control by the accused director.",
+    conclusion: "Non-executive directors should seek High Court quashing under Section 482 of CrPC.",
+    confidence_score: 95
+  };
+}
+
+export function getMockGeneralAIResult() {
+  return {
+    answer: "To manage background workers in Node, use message queues like BullMQ."
   };
 }
 
@@ -545,31 +643,19 @@ export function getMockAnalysis() {
     document_type: 'Service Agreement',
     key_facts: [
       'Agreement between two parties for software development services',
-      'Contract value of ₹15,00,000 with milestone-based payments',
-      'Project duration of 6 months from execution date',
-      'No specific mention of data protection or privacy terms',
-      'Intellectual property assignment clause is vaguely worded',
+      'Contract value of ₹15,00,000 with milestone-based payments'
     ],
     risks: [
-      { level: 'high', title: 'Vague IP Assignment', description: 'The intellectual property clause does not clearly specify ownership of derivative works and pre-existing IP. This could lead to disputes.' },
-      { level: 'high', title: 'No Data Protection Terms', description: 'Given DPDP Act 2023 requirements, the absence of data protection clauses is a significant compliance risk.' },
-      { level: 'medium', title: 'Limited Liability Cap Missing', description: 'No cap on liability has been specified, exposing both parties to unlimited claims.' },
-      { level: 'medium', title: 'Inadequate Termination Clause', description: 'Termination clause does not address payments for partially completed work or transition assistance.' },
-      { level: 'low', title: 'No Force Majeure', description: 'Agreement does not include force majeure provisions for unforeseen circumstances.' },
+      { level: 'high', title: 'Vague IP Assignment', description: 'IP clauses are vague.' }
     ],
     missing_clauses: [
-      { clause: 'Force Majeure', importance: 'Essential for protecting both parties from liability during unforeseen events like natural disasters or pandemics.' },
-      { clause: 'Data Protection & Privacy', importance: 'Required under the Digital Personal Data Protection Act, 2023 for any agreement involving personal data processing.' },
-      { clause: 'Non-Solicitation', importance: 'Prevents parties from poaching each other\'s employees during and after the engagement.' },
-      { clause: 'Limitation of Liability', importance: 'Caps maximum liability to contract value, preventing disproportionate claims.' },
+      { clause: 'Force Majeure', importance: 'Protects from pandemic disruptions.' }
     ],
     legal_issues: [
-      { issue: 'Stamp Duty Compliance', explanation: 'The agreement may require stamp duty as per the applicable state Stamp Act. Non-stamped agreements may not be admissible as evidence.' },
-      { issue: 'GST Implications', explanation: 'The payment terms do not address GST obligations. Under GST law, the service provider must charge 18% GST on services.' },
-      { issue: 'Dispute Resolution Mechanism', explanation: 'While arbitration is mentioned, the clause does not specify the seat of arbitration, language, or applicable arbitration rules.' },
+      { issue: 'Stamp Duty Compliance', explanation: 'Needs appropriate state stamps.' }
     ],
     overall_risk_score: 68,
-    recommendation: 'The agreement requires significant revision before execution. The most critical issues are the vague IP assignment clause and the complete absence of data protection terms (mandatory under DPDP Act 2023). We recommend adding Force Majeure, limitation of liability, data protection, and non-solicitation clauses. The arbitration clause should specify seat, language, and governing rules. GST and stamp duty compliance should be addressed explicitly.',
+    recommendation: 'The agreement requires revisions regarding IP and data protection clauses.'
   };
 }
 
@@ -585,41 +671,46 @@ export function getMockCitationResult() {
         citation_strength: "High",
         hierarchy_level: "Supreme Court",
         relevance_score: 98,
-        snippet: "A landmark judgment establishing the concept of Public Interest Litigation (PIL) in India, holding that any member of the public can approach the court for public injury."
-      },
-      {
-        name: "Bandhua Mukti Morcha v. Union of India",
-        citation: "(1984) 3 SCC 161",
-        court: "Supreme Court of India",
-        year: "1984",
-        citation_count: 189,
-        citation_strength: "High",
-        hierarchy_level: "Supreme Court",
-        relevance_score: 92,
-        snippet: "Reinforced PIL admissibility and held that the Court can appoint commissioners to locate bonded laborers and report back, bypassing rigid adversarial procedures."
-      },
-      {
-        name: "Sheela Barse v. State of Maharashtra",
-        citation: "(1983) 2 SCC 96",
-        court: "Supreme Court of India",
-        year: "1983",
-        citation_count: 78,
-        citation_strength: "Medium",
-        hierarchy_level: "Supreme Court",
-        relevance_score: 85,
-        snippet: "Addressed rights of women prisoners, establishing that legal aid is a fundamental right under Article 21 and laying down guidelines for custodial treatment."
+        snippet: "A landmark judgment establishing the concept of Public Interest Litigation (PIL) in India."
       }
     ],
     graph: {
       nodes: [
-        { id: "sp_gupta", label: "S.P. Gupta v. President of India (1981)", type: "supreme_court" },
-        { id: "bandhua", label: "Bandhua Mukti Morcha v. UOI (1984)", type: "supreme_court" },
-        { id: "sheela", label: "Sheela Barse v. State of Maha (1983)", type: "supreme_court" }
+        { id: "sp_gupta", label: "S.P. Gupta v. President of India (1981)", type: "supreme_court" }
       ],
-      links: [
-        { source: "bandhua", target: "sp_gupta", type: "cited_by" },
-        { source: "sheela", target: "sp_gupta", type: "cited_by" }
-      ]
+      links: []
     }
+  };
+}
+
+export function getMockSummary() {
+  return {
+    title: "Arnesh Kumar v. State of Bihar",
+    court: "Supreme Court of India",
+    date: "July 2, 2014",
+    facts: [
+      "The appellant (husband) filed a petition seeking anticipatory bail in a case registered under Section 498A IPC and Section 4 of the Dowry Prohibition Act.",
+      "The wife alleged that the husband and his family harassed and demanded dowry of Rs. 8 lakhs, a Maruti car, and other items.",
+      "The High Court of Patna rejected the anticipatory bail application of the husband, which led to this appeal in the Supreme Court."
+    ],
+    issues: [
+      "Whether the power of arrest is exercised routinely and arbitrarily by police officers under Section 498A IPC.",
+      "What guidelines and safeguards should be implemented to prevent arbitrary arrests in offences carrying less than 7 years imprisonment."
+    ],
+    petitioner_arguments: [
+      "The allegations of cruelty and dowry harassment are completely baseless and fabricated.",
+      "The arrest under Section 498A IPC is used as a tool of harassment and blackmail, leading to immediate custodial detention of family members without any preliminary inquiry."
+    ],
+    respondent_arguments: [
+      "Matrimonial cruelty is a grave social evil, and immediate arrest is required to prevent destruction of evidence and protect the victim.",
+      "The police acted in accordance with the law to investigate cognizable offences based on a written complaint by the wife."
+    ],
+    court_reasoning: "The Supreme Court noted that Section 498A was introduced to protect women but has been widely abused as a weapon by disgruntled wives. Arrest brings humiliation, castigates the person and his family forever. The Court held that the power to arrest is one thing, but the justification for the exercise of it is quite another. Section 41 of CrPC sets out restrictions and conditions on when a police officer may arrest without a warrant. The police must satisfy themselves that the arrest is necessary to prevent further offences, ensure proper investigation, or prevent tampering of evidence.",
+    verdict: "The Supreme Court allowed the appeal, granted anticipatory bail to the appellant, and laid down mandatory guidelines to be followed by the police and magistrates in all arrests for offences carrying less than 7 years imprisonment, making non-compliance punishable by disciplinary and contempt action.",
+    key_takeaways: [
+      "Police officers cannot arrest an accused automatically under Section 498A IPC without satisfying the conditions under Section 41 CrPC.",
+      "A notice of appearance under Section 41A CrPC must be served on the accused within 2 weeks of registering the FIR.",
+      "Magistrates must verify the reasons for arrest and satisfy themselves before authorizing detention of the accused."
+    ]
   };
 }

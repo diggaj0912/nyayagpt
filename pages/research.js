@@ -4,7 +4,7 @@
 
 import { storage } from '../utils/storage.js';
 import { toast } from '../components/toast.js';
-import { researchQuery, hasApiKey, getMockResearchResult, getMockDeepResearchResult, getMockGeneralAIResult } from '../services/ai';
+import { processQueryWorkflow, hasApiKey } from '../services/ai.js';
 
 const SUGGESTED_QUERIES = [
   'What are the ingredients of cheating under BNS?',
@@ -13,9 +13,7 @@ const SUGGESTED_QUERIES = [
   'Remedies for breach of contract under Indian law',
 ];
 
-// Active state of research
 let currentMode = 'legal'; // 'legal' | 'deep' | 'general'
-let activeResult = null;
 
 export function renderResearch() {
   const history = storage.getResearchHistory();
@@ -123,7 +121,6 @@ export function initResearch() {
   const submitBtn = document.getElementById('research-submit-btn');
   const textarea = document.getElementById('research-query');
 
-  // New research button
   document.getElementById('new-research-btn')?.addEventListener('click', () => {
     document.getElementById('canvas-stream').innerHTML = `
       <div id="welcome-canvas" style="padding: 24px; text-align: center; margin-top: 40px; max-width: 460px; margin-left: auto; margin-right: auto;">
@@ -139,7 +136,6 @@ export function initResearch() {
     if (textarea) textarea.value = '';
   });
 
-  // Mode selectors
   document.querySelectorAll('.mode-selector-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.mode-selector-btn').forEach(b => {
@@ -157,7 +153,6 @@ export function initResearch() {
     });
   });
 
-  // Suggested chips
   document.querySelectorAll('[data-suggest-query]').forEach(chip => {
     chip.addEventListener('click', () => {
       if (textarea) {
@@ -167,7 +162,6 @@ export function initResearch() {
     });
   });
 
-  // Recent queries clicks
   document.querySelectorAll('.recent-query-item').forEach(item => {
     item.addEventListener('click', () => {
       if (textarea) {
@@ -177,12 +171,10 @@ export function initResearch() {
     });
   });
 
-  // Exec button click
   if (submitBtn) {
     submitBtn.addEventListener('click', () => executeResearch(textarea, submitBtn));
   }
 
-  // Enter key press
   if (textarea) {
     textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -204,7 +196,6 @@ async function executeResearch(textarea, submitBtn) {
   submitBtn.disabled = true;
   document.getElementById('submit-btn-text').textContent = 'Analyzing...';
 
-  // Renders the progressive loading steps based on selected search mode
   if (currentMode === 'deep') {
     stream.innerHTML = renderProgressiveSteps();
     await animateProgressiveSteps();
@@ -222,21 +213,13 @@ async function executeResearch(textarea, submitBtn) {
   }
 
   try {
-    let result;
-    if (hasApiKey()) {
-      result = await researchQuery(query, currentMode);
-    } else {
-      await new Promise(r => setTimeout(r, 1500));
-      if (currentMode === 'deep') result = getMockDeepResearchResult();
-      else if (currentMode === 'general') result = getMockGeneralAIResult();
-      else result = getMockResearchResult();
-    }
+    // ALWAYS call processQueryWorkflow with the user's actual query
+    const result = await processQueryWorkflow(query, currentMode);
 
-    activeResult = result;
     storage.incrementUsage('research');
     storage.logActivity('research', `${currentMode === 'deep' ? 'Deep' : 'Legal'} research executed`, '🔍');
 
-    // Save search item to storage
+    // Save search item to history
     storage.saveResearch({
       query,
       actsCount: result.acts?.length || result.applicable_laws?.length || 0,
@@ -272,7 +255,7 @@ async function executeResearch(textarea, submitBtn) {
 
   } catch (err) {
     toast.error('Legal index retrieval failed: ' + err.message);
-    stream.innerHTML = '<div style="padding:20px; color:var(--danger)">An error occurred during query execution.</div>';
+    stream.innerHTML = `<div style="padding:20px; color:var(--danger)">An error occurred: ${err.message}</div>`;
   } finally {
     submitBtn.disabled = false;
     document.getElementById('submit-btn-text').textContent = 'Execute';
@@ -320,7 +303,7 @@ async function animateProgressiveSteps() {
         icon.innerHTML = '🔄';
         icon.style.background = 'transparent';
       }
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 400));
       if (icon) {
         icon.innerHTML = '✅';
         icon.style.color = 'var(--secondary)';
@@ -332,16 +315,49 @@ async function animateProgressiveSteps() {
 }
 
 function renderCanvasResult(query, result) {
-  if (currentMode === 'general') {
+  if (!result.is_legal) {
     return `
       <div style="font-size: 0.875rem; line-height: 1.6; color: var(--text-primary);">
-        <h4 style="font-weight: 600; margin-bottom: 12px; font-family: var(--font-headline);">Question</h4>
-        <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light);">${escapeHtml(query)}</p>
-        <h4 style="font-weight: 600; margin-bottom: 12px; font-family: var(--font-headline);">Answer</h4>
-        <p style="white-space: pre-wrap;">${escapeHtml(result.answer)}</p>
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px;">User Query</h5>
+        <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); font-style: italic;">"${escapeHtml(query)}"</p>
+        
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px;">AI Assistant Response</h5>
+        <div style="white-space: pre-wrap; background: rgba(0,0,0,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 8px; color: var(--text-primary);">${escapeHtml(result.answer)}</div>
       </div>
     `;
   }
+
+  // Legal result layout
+  let sourcesHtml = '';
+  if (result.sources_found === false) {
+    sourcesHtml = `
+      <div class="card" style="padding: 12px; border-left: 4px solid var(--danger); margin-bottom: 20px; background: rgba(239,68,68,0.02); border-color: rgba(239,68,68,0.1);">
+        <h6 style="color: var(--danger); margin: 0 0 4px; font-weight: 600;">No Legal Sources Found</h6>
+        <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">The legal engine did not retrieve specific statutory codes or judgments for this query. Falling back to general legal AI reasoning.</p>
+      </div>
+    `;
+  } else {
+    const acts = result.acts || result.applicable_laws || [];
+    const judgments = result.judgments || [];
+    const actBadges = acts.map(a => `<span class="badge badge-primary" style="margin-right: 6px; margin-bottom: 6px;">${escapeHtml(a.name || a.act)} - ${escapeHtml(a.section)}</span>`).join('');
+    const caseBadges = judgments.map(j => `<span class="badge badge-success" style="margin-right: 6px; margin-bottom: 6px;">⚖️ ${escapeHtml(j.name)} (${j.year})</span>`).join('');
+    sourcesHtml = `
+      <div style="margin-bottom: 20px;">
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 8px;">Retrieved Sources</h5>
+        <div style="display: flex; flex-wrap: wrap;">
+          ${actBadges}
+          ${caseBadges}
+        </div>
+      </div>
+    `;
+  }
+
+  const reasoningHtml = result.reasoning_summary ? `
+    <div style="margin-bottom: 20px; background: rgba(37,99,235,0.02); border: 1px solid rgba(37,99,235,0.1); padding: 12px; border-radius: 6px;">
+      <h5 style="font-weight: 600; color: var(--accent); text-transform: uppercase; font-size: 0.6875rem; margin: 0 0 4px;">AI Search & Reasoning Summary</h5>
+      <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">${escapeHtml(result.reasoning_summary)}</p>
+    </div>
+  ` : '';
 
   if (currentMode === 'deep') {
     return `
@@ -356,23 +372,15 @@ function renderCanvasResult(query, result) {
           </div>
         </div>
 
+        <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px; margin-top: 16px;">User Query</h5>
+        <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); font-style: italic;">"${escapeHtml(query)}"</p>
+
+        ${reasoningHtml}
+        ${sourcesHtml}
+
         <div class="card" style="padding: 16px; margin-bottom: 20px; border-left: 4px solid var(--accent);">
           <h5 style="margin-bottom: 6px; font-weight: 600; color: var(--text-primary); font-family: var(--font-headline);">Issue Summary</h5>
           <p style="margin: 0; color: var(--text-secondary); font-size: 0.8125rem;">${escapeHtml(result.issue_summary)}</p>
-        </div>
-
-        <!-- Applicable statutes -->
-        <div style="margin-bottom: 20px;">
-          <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-family: var(--font-headline);">Applicable Laws & Provisions</h5>
-          <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-            ${(result.applicable_laws || []).map(law => `
-              <div style="padding: 10px; background: rgba(0,0,0,0.01); border: 1px solid var(--border); border-radius: 6px;">
-                <div style="font-weight: 600; color: var(--primary);">${escapeHtml(law.act)}</div>
-                <div class="badge badge-primary" style="margin: 4px 0;">${escapeHtml(law.section)}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${escapeHtml(law.description)}</div>
-              </div>
-            `).join('')}
-          </div>
         </div>
 
         <!-- Arguments pro and con -->
@@ -397,6 +405,12 @@ function renderCanvasResult(query, result) {
           <ul style="padding-left: 20px; font-size: 0.8125rem; display: flex; flex-direction: column; gap: 4px;">
             ${(result.potential_risks || []).map(risk => `<li>${escapeHtml(risk)}</li>`).join('')}
           </ul>
+        </div>
+
+        <!-- Main analysis -->
+        <div style="margin-bottom: 20px;">
+          <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-family: var(--font-headline);">Detailed Analysis</h5>
+          <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6;">${escapeHtml(result.analysis || '')}</p>
         </div>
 
         <!-- Research Conclusion -->
@@ -427,9 +441,16 @@ function renderCanvasResult(query, result) {
   return `
     <div style="font-size: 0.875rem; line-height: 1.6;">
       
-      <!-- Executive Summary / Analysis -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
-        <h4 style="font-weight: 700; color: var(--text-primary); margin: 0; font-family: var(--font-headline);">Legal Analysis Summary</h4>
+      <!-- User Query -->
+      <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 6px;">User Query</h5>
+      <p style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); font-style: italic;">"${escapeHtml(query)}"</p>
+
+      ${reasoningHtml}
+      ${sourcesHtml}
+
+      <!-- Final Answer / Analysis -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; margin-top: 24px;">
+        <h4 style="font-weight: 700; color: var(--text-primary); margin: 0; font-family: var(--font-headline);">Final AI Answer</h4>
         <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-secondary);">
           <span>Confidence:</span>
           <span style="font-weight: 700; color: var(--secondary);">${result.confidence_score || 90}%</span>
@@ -443,7 +464,7 @@ function renderCanvasResult(query, result) {
       <!-- Precedent Timeline -->
       ${judgmentsTimeline ? `
         <div style="margin-bottom: 24px;">
-          <h5 style="font-weight: 600; color: var(--text-primary); margin-bottom: 12px; font-family: var(--font-headline);">Judgment History & Timeline</h5>
+          <h5 style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.6875rem; margin-bottom: 12px; font-family: var(--font-headline);">Precedent History & Timeline</h5>
           <div style="margin-top: 12px;">${judgmentsTimeline}</div>
         </div>
       ` : ''}
@@ -478,13 +499,18 @@ function populateInspector(result) {
 
   if (!placeholder || !content) return;
 
+  if (!result.is_legal || result.sources_found === false) {
+    placeholder.style.display = 'flex';
+    content.style.display = 'none';
+    return;
+  }
+
   placeholder.style.display = 'none';
   content.style.display = 'block';
 
   const judgments = result.judgments || [];
   const acts = result.acts || result.applicable_laws || [];
 
-  // Authority graph nodes & flow
   const graphHtml = renderGraphFlow(judgments);
 
   content.innerHTML = `
@@ -543,10 +569,8 @@ function populateInspector(result) {
     </div>
   `;
 
-  // Attach card inspector hover or clicks
   document.querySelectorAll('.citation-card-item').forEach(card => {
     card.addEventListener('click', () => {
-      const title = card.dataset.caseTitle;
       const ratio = card.dataset.caseRatio;
       toast.info(`Precedent ratio: ${ratio}`, 4000);
     });
