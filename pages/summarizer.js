@@ -6,6 +6,7 @@ import { storage } from '../utils/storage.js';
 import { toast } from '../components/toast.js';
 import { summarizeJudgment, hasApiKey, getMockSummary } from '../services/ai.js';
 import { downloadAsHTML } from '../utils/pdf.js';
+import { showModal } from '../components/modal.js';
 
 const SUMMARY_TABS = [
   { id: 'facts', label: 'Facts', icon: '📋' },
@@ -299,24 +300,86 @@ function initSummaryActions(result, originalText) {
   });
 
   document.getElementById('export-summary-btn')?.addEventListener('click', () => {
-    let html = `<h1>${escapeHtml(result.title || 'Judgment Summary')}</h1>`;
-    html += `<div class="meta">${escapeHtml(result.court || '')} ${result.date ? '· ' + escapeHtml(result.date) : ''}</div>`;
+    showModal({
+      title: 'Export Summary',
+      content: `
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 4px 0;">
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Select your preferred download format for <strong>${escapeHtml(result.title || 'Summary')}</strong>:</p>
+          <button class="btn btn-secondary" id="export-pdf-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; width: 100%;">
+            📄 Export as PDF Document
+          </button>
+          <button class="btn btn-secondary" id="export-docx-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; width: 100%;">
+            📝 Export as Microsoft Word (.docx)
+          </button>
+          <button class="btn btn-secondary" id="export-html-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; width: 100%;">
+            🌐 Export as Raw HTML Document
+          </button>
+        </div>
+      `
+    });
 
-    SUMMARY_TABS.forEach(tab => {
-      const content = result[tab.id];
-      if (content) {
-        html += `<div class="section"><div class="section-title">${tab.label}</div>`;
-        if (Array.isArray(content)) {
-          html += `<ul>${content.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
-        } else {
-          html += `<p>${escapeHtml(content)}</p>`;
-        }
-        html += '</div>';
+    document.getElementById('export-pdf-btn')?.addEventListener('click', async () => {
+      toast.info('Generating PDF...');
+      try {
+        const response = await fetch('/api/summarizer/export/pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ summary: result })
+        });
+        if (!response.ok) throw new Error('PDF export failed');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${result.title || 'Summary'}.pdf`;
+        a.click();
+        toast.success('PDF downloaded successfully');
+      } catch (err) {
+        toast.error('Failed to export PDF: ' + err.message);
       }
     });
 
-    downloadAsHTML(html, result.title || 'Judgment Summary', `summary_${Date.now()}.html`);
-    toast.success('Summary exported');
+    document.getElementById('export-docx-btn')?.addEventListener('click', async () => {
+      toast.info('Generating DOCX...');
+      try {
+        const response = await fetch('/api/summarizer/export/docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ summary: result })
+        });
+        if (!response.ok) throw new Error('DOCX export failed');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${result.title || 'Summary'}.docx`;
+        a.click();
+        toast.success('DOCX downloaded successfully');
+      } catch (err) {
+        toast.error('Failed to export DOCX: ' + err.message);
+      }
+    });
+
+    document.getElementById('export-html-btn')?.addEventListener('click', () => {
+      let html = `<h1>${escapeHtml(result.title || 'Judgment Summary')}</h1>`;
+      html += `<div class="meta">${escapeHtml(result.court || '')} ${result.date ? '· ' + escapeHtml(result.date) : ''}</div>`;
+
+      SUMMARY_TABS.forEach(tab => {
+        const content = result[tab.id];
+        if (content) {
+          html += `<div class="section"><div class="section-title">${tab.label}</div>`;
+          if (Array.isArray(content)) {
+            html += `<ul>${content.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+          } else {
+            html += `<p>${escapeHtml(content)}</p>`;
+          }
+          html += '</div>';
+        }
+      });
+
+      downloadAsHTML(html, result.title || 'Judgment Summary', `summary_${Date.now()}.html`);
+      toast.success('HTML exported');
+    });
   });
 }
 
@@ -326,3 +389,4 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
