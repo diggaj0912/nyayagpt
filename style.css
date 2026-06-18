@@ -13,57 +13,58 @@
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
   /* Colors */
-  --primary: #6C5CE7;
-  --primary-light: #a29bfe;
-  --primary-dark: #5241d0;
-  --primary-glow: rgba(108, 92, 231, 0.3);
-  --secondary: #00B894;
-  --secondary-light: #55efc4;
-  --secondary-dark: #00a381;
-  --accent: #FDCB6E;
-  --accent-dark: #f0b030;
-  --danger: #FF6B6B;
-  --danger-light: #ff8787;
-  --warning: #ffa502;
-  --info: #74b9ff;
+  --primary: #0F172A; /* Deep Navy */
+  --primary-light: #334155;
+  --primary-dark: #020617;
+  --primary-glow: rgba(37, 99, 235, 0.08);
+  --secondary: #10B981; /* Success Emerald */
+  --secondary-light: #34d399;
+  --secondary-dark: #047857;
+  --accent: #2563EB; /* Electric Blue */
+  --accent-dark: #1d4ed8;
+  --danger: #ef4444;
+  --danger-light: #f87171;
+  --warning: #f59e0b;
+  --info: #3b82f6;
 
   /* Background */
-  --bg-deep: #07070F;
-  --bg-primary: #0F0F23;
-  --bg-surface: #16162A;
-  --bg-surface-2: #1E1E36;
-  --bg-elevated: #25253D;
-  --bg-hover: #2D2D4A;
+  --bg-deep: #eceef0; /* Sidebar/deep background */
+  --bg-primary: #f7f9fb; /* Canvas background */
+  --bg-surface: #ffffff; /* Card/modals background */
+  --bg-surface-2: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-hover: #eceef0;
 
   /* Text */
-  --text-primary: #E8E8F0;
-  --text-secondary: #8888A8;
-  --text-tertiary: #5C5C78;
-  --text-inverse: #0F0F23;
+  --text-primary: #0f172a; /* Deep Navy */
+  --text-secondary: #475569; /* Slate text */
+  --text-tertiary: #64748b; /* Muted Slate */
+  --text-inverse: #ffffff;
 
   /* Border */
-  --border: rgba(255, 255, 255, 0.06);
-  --border-light: rgba(255, 255, 255, 0.10);
-  --border-active: rgba(108, 92, 231, 0.4);
+  --border: #e2e8f0;
+  --border-light: #e2e8f0;
+  --border-active: rgba(37, 99, 235, 0.4);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-headline: 'Hanken Grotesk', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Sizing */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius: 8px; /* ROUND_EIGHT in Stitch */
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow: 0 4px 12px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
-  --shadow-xl: 0 16px 48px rgba(0,0,0,0.5);
-  --shadow-glow: 0 0 30px rgba(108, 92, 231, 0.15);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 8px 30px rgba(15, 23, 42, 0.05);
+  --shadow-xl: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.08);
 
   /* Transitions */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -130,6 +131,10 @@ input, textarea, select {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
 /* ── Typography ────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-headline);
+  color: var(--text-primary);
+}
 h1 { font-size: 3rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; }
 h2 { font-size: 2rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
 h3 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; }
@@ -399,14 +404,14 @@ h6 { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-sp
 
 /* ── Glass Effects ─────────────────────────────────────────── */
 .glass {
-  background: rgba(22, 22, 42, 0.7);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
 }
 
 .glass-strong {
-  background: rgba(15, 15, 35, 0.85);
+  background: rgba(247, 249, 251, 0.85);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid var(--border-light);
@@ -694,7 +699,7 @@ h6 { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-sp
   justify-content: space-between;
   padding: 0 28px;
   border-bottom: 1px solid var(--border);
-  background: rgba(15, 15, 35, 0.8);
+  background: rgba(247, 249, 251, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   position: sticky;
@@ -1092,7 +1097,7 @@ h6 { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-sp
   transition: all var(--duration) var(--ease);
 }
 .landing-nav.scrolled {
-  background: rgba(15, 15, 35, 0.9);
+  background: rgba(247, 249, 251, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
