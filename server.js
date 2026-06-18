@@ -1,11 +1,19 @@
 // ═══════════════════════════════════════════════════════════════
-// NyayaGPT — Express Backend Server
+// NyayaGPT — Production SaaS Backend Server
 // ═══════════════════════════════════════════════════════════════
 
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { classifyQueryHeuristic, searchLegalDB } from './services/legal_db.js';
+import crypto from 'crypto';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
+import { createClient } from '@supabase/supabase-js';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import PDFDocument from 'pdfkit';
+import { generateSummaryPDF } from './generate_pdf.js';
+
 
 dotenv.config();
 
@@ -16,71 +24,176 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// API Key Resolver Helper
-function resolveApiKey(req) {
-  // Check Authorization Header
+// Initialize Supabase admin client (Bypasses RLS where necessary, e.g., webhooks & admin panels)
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+let supabase = null;
+
+if (supabaseUrl && supabaseServiceKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('🟢 Supabase client initialized.');
+  } catch (err) {
+    console.error('❌ Failed to initialize Supabase client:', err.message);
+  }
+} else {
+  console.log('⚠️ SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing. Running server with local offline schemas and mock vector db.');
+}
+
+// Gemini Base Configuration
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const EMBEDDING_MODEL = 'text-embedding-004';
+const CHAT_MODEL = 'gemini-2.5-pro';
+const FAST_MODEL = 'gemini-2.5-flash';
+
+// ── API Key Resolver ──────────────────────────────────────────
+function getApiKey(req) {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    const key = authHeader.substring(7).trim();
-    if (key) return key;
+    return authHeader.substring(7).trim();
   }
-  
-  // Check Request Body
-  if (req.body && req.body.apiKey) {
-    return req.body.apiKey;
-  }
-  
-  // Check Environment Variable
   return process.env.GEMINI_API_KEY || '';
 }
 
-// Gemini API Call Helper
-async function callGeminiAPI(apiKey, prompt, systemInstruction = '') {
-  const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-  const MODEL = 'gemini-2.0-flash';
-  const url = `${GEMINI_BASE}/${MODEL}:generateContent?key=${apiKey}`;
+// ── Gemini API Call Helpers ────────────────────────────────────
 
+async function callGemini(apiKey, model, systemPrompt, userMessage, jsonMode = true) {
+  const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
+  
   const body = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ parts: [{ text: userMessage }] }],
     generationConfig: {
-      temperature: 0.7,
+      temperature: 0.2,
       topP: 0.95,
       maxOutputTokens: 8192,
-      responseMimeType: 'application/json',
-    },
+      responseMimeType: jsonMode ? 'application/json' : 'text/plain',
+    }
   };
 
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  if (systemPrompt) {
+    body.systemInstruction = { parts: [{ text: systemPrompt }] };
   }
 
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Gemini API error: ${res.status}`);
+    const errText = await res.text();
+    throw new Error(`Gemini API error (${res.status}): ${errText}`);
   }
 
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty response from Gemini');
+  if (!text) throw new Error('Empty response from AI engine');
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[1].trim());
+  if (jsonMode) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+      if (match) return JSON.parse(match[1]);
+      throw new Error('Failed to parse response as JSON');
     }
-    return { raw: text };
   }
+  return text;
 }
 
-// ── SYSTEM PROMPTS ──────────────────────────────────────────
+// Generate Embeddings via Gemini text-embedding-004
+async function getGeminiEmbedding(apiKey, text) {
+  const url = `${GEMINI_BASE}/${EMBEDDING_MODEL}:embedContent?key=${apiKey}`;
+  
+  const body = {
+    model: `models/${EMBEDDING_MODEL}`,
+    content: { parts: [{ text }] }
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    throw new Error(`Embedding generation failed: ${res.statusText}`);
+  }
+
+  const data = await res.json();
+  return data?.embedding?.values || [];
+}
+
+// ── Auth Verification Middleware ────────────────────────────────
+async function verifyUser(req, res, next) {
+  if (!supabase) {
+    req.user = { id: '00000000-0000-0000-0000-000000000000', email: 'demo@nyayagpt.in', raw_user_meta_data: { full_name: 'Demo Advocate' } };
+    return next();
+  }
+
+  const token = req.headers['x-supabase-token'];
+  if (!token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return res.status(401).json({ error: 'Invalid authentication session' });
+  }
+
+  req.user = user;
+  next();
+}
+
+// ── Phase 7: Subscription Enforcement Middleware ───────────────
+async function checkUsageQuotas(req, res, next) {
+  if (!supabase) {
+    req.userSubscription = { id: 'mock-sub-id', plan_tier: 'student', status: 'active', usage_count_research: 0, usage_count_summaries: 0, usage_count_drafts: 0 };
+    return next();
+  }
+
+  const userId = req.user.id;
+  
+  const { data: sub, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !sub) {
+    return res.status(403).json({ error: 'No active billing subscription found' });
+  }
+
+  if (sub.status !== 'active') {
+    return res.status(402).json({ error: 'Subscription past due or inactive' });
+  }
+
+  // Quota enforcement based on Tier
+  const limits = {
+    student: { research: 10, summaries: 5, drafts: 5 },
+    pro: { research: 500, summaries: 100, drafts: 100 },
+    firm: { research: 2000, summaries: 500, drafts: 500 },
+    enterprise: { research: 99999, summaries: 99999, drafts: 99999 }
+  };
+
+  const currentLimits = limits[sub.plan_tier] || limits.student;
+
+  const path = req.path;
+  if (path.includes('/research') && sub.usage_count_research >= currentLimits.research) {
+    return res.status(429).json({ error: 'Research query limit exceeded for current billing cycle' });
+  }
+  if (path.includes('/summarizer') && sub.usage_count_summaries >= currentLimits.summaries) {
+    return res.status(429).json({ error: 'Summary limit exceeded for current billing cycle' });
+  }
+  if (path.includes('/drafts') && sub.usage_count_drafts >= currentLimits.drafts) {
+    return res.status(429).json({ error: 'Contract draft generation limit exceeded' });
+  }
+
+  req.userSubscription = sub;
+  next();
+}
+
+// ── System Instructions ──────────────────────────────────────
 
 const CLASSIFICATION_SYSTEM = `Analyze the user's input. Identify if this query is asking for Indian legal advice, statutory codes, sections, court judgments, precedents, or other legal information.
 Respond in this EXACT JSON format:
@@ -88,26 +201,24 @@ Respond in this EXACT JSON format:
   "is_legal": true
 }`;
 
-const RESEARCH_SYSTEM = `You are NyayaGPT, an expert Indian legal research assistant. You search court records and acts to ground your answers.
-If no relevant Indian statutes or judgments are found, set "sources_found" to false.
-
+const RAG_RESEARCH_SYSTEM = `You are NyayaGPT, an expert Indian legal research assistant.
+Based on the provided acts and judgments, generate a comprehensive legal memorandum.
+Set "sources_found" to true if specific statutory codes or judgments are found.
 Respond in this EXACT JSON format:
 {
   "sources_found": true,
+  "issue_summary": "Summary of the legal issue",
   "acts": [
-    { "name": "Act Name", "section": "Section Number", "description": "Brief explanation of relevance" }
+    { "name": "Act Name", "section": "Section number", "description": "Relevance" }
   ],
   "judgments": [
-    { "name": "Case Name v. Other Party", "citation": "(Year) Volume SCC/AIR Page", "court": "Supreme Court / High Court Name", "year": "Year", "relevance": 95, "snippet": "Key excerpt or ratio" }
+    { "name": "Case Name", "citation": "Citation", "court": "Court", "year": "Year", "relevance": 95, "snippet": "Excerpt" }
   ],
-  "reasoning_summary": "Brief summary of AI's search and analytical logic (1-2 sentences)",
-  "analysis": "Detailed legal analysis in 3-5 paragraphs with inline references to the acts and judgments listed above.",
-  "confidence_score": 95,
+  "reasoning_summary": "AI reasoning analysis summary",
+  "analysis": "Detailed legal memo analysis",
+  "confidence_score": 90,
   "timeline": [
-    { "year": "Year", "event": "Precedent established or statutory change" }
-  ],
-  "related_cases": [
-    { "name": "Case Name", "citation": "Citation", "court": "Court" }
+    { "year": "Year", "event": "Event description" }
   ],
   "follow_ups": [
     "Suggested question 1",
@@ -115,237 +226,440 @@ Respond in this EXACT JSON format:
   ]
 }`;
 
-const DEEP_RESEARCH_SYSTEM = `You are NyayaGPT, a senior legal researcher in India. Perform a deep multi-step legal analysis and return a comprehensive legal memorandum.
-If no relevant Indian statutes or judgments are found, set "sources_found" to false.
-
-Respond in this EXACT JSON format:
-{
-  "sources_found": true,
-  "issue_summary": "Summary of the legal issue(s)",
-  "applicable_laws": [
-    { "act": "Act Name", "section": "Section Code", "description": "Relevance" }
-  ],
-  "judgments": [
-    { "name": "Case Name", "citation": "Citation", "court": "Court", "year": "Year", "strength": 90, "snippet": "Ratio/summary" }
-  ],
-  "reasoning_summary": "Brief summary of AI's search and analytical logic (1-2 sentences)",
-  "arguments_for": ["Argument 1", "Argument 2"],
-  "arguments_against": ["Argument 1", "Argument 2"],
-  "potential_risks": ["Risk 1", "Risk 2"],
-  "analysis": "Detailed legal analysis of the memorandum.",
-  "conclusion": "Final detailed research memo conclusion",
-  "confidence_score": 95,
-  "timeline": [
-    { "year": "Year", "event": "Precedent established or statutory change" }
-  ],
-  "related_cases": [
-    { "name": "Case Name", "citation": "Citation", "court": "Court" }
-  ],
-  "follow_ups": [
-    "Suggested question 1",
-    "Suggested question 2"
-  ]
-}`;
-
-const GENERAL_AI_SYSTEM = `You are a helpful AI assistant. Answer the user's question clearly. Return the answer in this JSON format:
-{
-  "answer": "Your detailed answer here"
-}`;
-
-// ── API ROUTES ──────────────────────────────────────────────
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', server: 'NyayaGPT Express Backend' });
-});
-
-// Main research router
-app.post('/api/research', async (req, res) => {
+// ── Phase 2 & 3: Legal Research & RAG ────────────────────────
+app.post('/api/research', verifyUser, checkUsageQuotas, async (req, res) => {
   const { query, mode = 'legal' } = req.body;
+  const apiKey = getApiKey(req);
   
-  if (!query) {
-    return res.status(400).json({ error: 'Query is required' });
+  if (!apiKey) {
+    return res.status(400).json({ error: 'Gemini API key is required' });
   }
-
-  const apiKey = resolveApiKey(req);
-  console.log(`[Backend API] Processing query: "${query}" in mode: "${mode}". Has Key: ${!!apiKey}`);
 
   try {
-    // Step 1: Query Classification
-    let isLegal = false;
-    
-    if (apiKey) {
-      try {
-        const classification = await callGeminiAPI(
-          apiKey,
-          `Analyze user query: "${query}"`,
-          CLASSIFICATION_SYSTEM
-        );
-        isLegal = !!classification.is_legal;
-      } catch (err) {
-        console.warn('[Backend API] Gemini classification failed, falling back to heuristic:', err.message);
-        isLegal = classifyQueryHeuristic(query).is_legal;
-      }
-    } else {
-      isLegal = classifyQueryHeuristic(query).is_legal;
+    // 1. Classification
+    const classification = await callGemini(
+      apiKey,
+      FAST_MODEL,
+      CLASSIFICATION_SYSTEM,
+      `Analyze user query: "${query}"`
+    );
+
+    if (!classification.is_legal) {
+      // General direct response
+      const answer = await callGemini(
+        apiKey,
+        FAST_MODEL,
+        'You are a helpful assistant. Provide a structured response.',
+        query,
+        false // Plain text
+      );
+      
+      await supabase.from('activity_logs').insert({ user_id: req.user.id, action_type: 'query', metadata: { is_legal: false } });
+      return res.json({ is_legal: false, query, answer });
     }
 
-    // Step 2: Routing
-    if (isLegal) {
-      // It is a legal query. Run RAG search
-      const ragResults = searchLegalDB(query);
-      
-      if (apiKey) {
-        // We have an API key, perform RAG augmented generation
-        const contextStr = JSON.stringify(ragResults);
-        
-        if (ragResults.sources_found) {
-          // Sources found. Generate grounded legal answer
-          const systemInstruction = mode === 'deep' ? DEEP_RESEARCH_SYSTEM : RESEARCH_SYSTEM;
-          const prompt = `User Query: "${query}"\n\nRetrieved Legal Context:\n${contextStr}\n\nBased on the retrieved acts and judgments, generate the legal answer/memorandum. Strictly align with the required JSON structure.`;
-          
-          const aiResponse = await callGeminiAPI(apiKey, prompt, systemInstruction);
-          return res.json({
-            is_legal: true,
-            query,
-            sources_found: true,
-            ...aiResponse,
-            graph: ragResults.graph // Attach citation graph built by search engine
-          });
-        } else {
-          // No legal sources found in database. Inform user & fallback to general legal AI reasoning
-          console.log('[Backend API] Legal query, but no sources found in RAG. Falling back to general reasoning.');
-          const systemInstruction = mode === 'deep' ? DEEP_RESEARCH_SYSTEM : RESEARCH_SYSTEM;
-          const prompt = `User Query: "${query}"\n\nNote: No specific matches were found in the local legal database. Perform general legal reasoning to analyze and answer the query. Set "sources_found" to false in your JSON.`;
-          
-          const aiResponse = await callGeminiAPI(apiKey, prompt, systemInstruction);
-          return res.json({
-            is_legal: true,
-            query,
-            sources_found: false,
-            ...aiResponse
-          });
-        }
-      } else {
-        // No API key configured. Run dynamic local mock RAG generator
-        console.log('[Backend API] Running in Demo mode (RAG Fallback)');
-        const response = generateDynamicMockResponse(query, mode, ragResults);
-        return res.json(response);
+    // 2. Legal Research Vector Search
+    const queryVector = await getGeminiEmbedding(apiKey, query);
+    
+    // Call pgvector matching RPC
+    const { data: chunks, error: rpcError } = await supabase.rpc('match_document_chunks', {
+      query_embedding: queryVector,
+      match_threshold: 0.25,
+      match_count: 5
+    });
+
+    if (rpcError) throw rpcError;
+
+    const contextStr = chunks && chunks.length > 0
+      ? chunks.map(c => `[Doc Chunk]: ${c.content}`).join('\n')
+      : "No matching documents found in user workspace knowledge base.";
+
+    // 3. Generate Answer
+    const response = await callGemini(
+      apiKey,
+      CHAT_MODEL,
+      RAG_RESEARCH_SYSTEM,
+      `Query: "${query}"\n\nRetrieved Knowledge Context:\n${contextStr}`
+    );
+
+    // Increment Usage limits
+    await supabase.rpc('increment_usage', { sub_id: req.userSubscription.id, column_name: 'usage_count_research' });
+    
+    // Save to search log database history
+    await supabase.from('research_history').insert({
+      user_id: req.user.id,
+      query,
+      is_legal: true,
+      sources: response.acts || [],
+      answer: response.analysis || '',
+      reasoning_summary: response.reasoning_summary,
+      timeline: response.timeline || [],
+      citation_graph: { nodes: (response.judgments || []).map(j => ({ id: j.name, label: j.name, type: 'supreme_court' })), links: [] }
+    });
+
+    await supabase.from('notifications').insert({
+      user_id: req.user.id,
+      title: 'Research completed',
+      message: `Query resolved: "${query.slice(0, 30)}..."`,
+      type: 'research_completed'
+    });
+
+    res.json({
+      is_legal: true,
+      query,
+      sources_found: response.sources_found,
+      ...response,
+      graph: {
+        nodes: (response.judgments || []).map((j, i) => ({ id: `${i}`, label: j.name, type: 'court' })),
+        links: []
       }
-    } else {
-      // Non-legal query. Route to General LLM
-      if (apiKey) {
-        const response = await callGeminiAPI(
-          apiKey,
-          `Answer general query: "${query}"`,
-          GENERAL_AI_SYSTEM
-        );
-        return res.json({
-          is_legal: false,
-          query,
-          answer: response.answer
-        });
-      } else {
-        // No API key general fallback
-        const cleanQuery = query.trim();
-        const fallbackText = `General Assistant (Demo Mode): You asked: "${cleanQuery}".\n\nThis query is classified as a general (non-legal) prompt. To get full generative answers, please connect your Gemini API Key in the Settings panel.`;
-        return res.json({
-          is_legal: false,
-          query,
-          answer: fallbackText
-        });
-      }
-    }
-  } catch (error) {
-    console.error('[Backend API] Error processing query:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Dynamic Local Mock Generator (Never hardcoded)
-function generateDynamicMockResponse(query, mode, ragResults) {
-  const queryWords = query.split(/\s+/).filter(w => w.length > 3).slice(0, 5).join(' ');
-  const displaySubject = queryWords ? `"${queryWords}"` : `your request`;
+// ── Phase 4: Summarizer ──────────────────────────────────────
+app.post('/api/summarizer/upload', verifyUser, checkUsageQuotas, async (req, res) => {
+  const { documentText } = req.body;
+  const apiKey = getApiKey(req);
+
+  if (!documentText) {
+    return res.status(400).json({ error: 'Text document is required' });
+  }
+
+  try {
+    const SUMMARIZER_SYSTEM = `You are a legal summarizer. Analyze the court judgment and provide a structured JSON:
+    {
+      "title": "Case title",
+      "court": "Court name",
+      "date": "Date of judgment",
+      "facts": ["Fact 1", "Fact 2"],
+      "issues": ["Issue 1"],
+      "petitioner_arguments": ["Arg 1"],
+      "respondent_arguments": ["Arg 1"],
+      "court_reasoning": "Reasoning summary",
+      "verdict": "Verdict summary",
+      "key_takeaways": ["Takeaway 1"]
+    }`;
+
+    const summary = await callGemini(
+      apiKey,
+      CHAT_MODEL,
+      SUMMARIZER_SYSTEM,
+      documentText.slice(0, 40000)
+    );
+
+    // Save summary document metadata in Supabase
+    await supabase.from('documents').insert({
+      title: summary.title || 'Judgment Summary',
+      content: JSON.stringify(summary),
+      doc_type: 'judgment',
+      uploaded_by: req.user.id
+    });
+
+    await supabase.rpc('increment_usage', { sub_id: req.userSubscription.id, column_name: 'usage_count_summaries' });
+
+    res.json(summary);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Download/export generated formats
+app.post('/api/summarizer/export/docx', (req, res) => {
+  const { summary } = req.body;
   
-  if (!ragResults.sources_found) {
-    // If no legal sources are found in the local DB
-    return {
-      is_legal: true,
-      query,
-      sources_found: false,
-      reasoning_summary: `Scanned statutory databases for ${displaySubject}, but found no direct references.`,
-      analysis: `We did not locate specific statutory sections or judgments directly matching: "${query}".\n\nGeneral legal reasoning indicates that this issue is likely governed by general principles of Indian civil/criminal law. In legal practice, a matter of this nature would require checking procedural details and state-specific amendments.\n\n[DEMO MODE] Connect your Gemini API key in Settings to search the live indexes.`,
-      confidence_score: 45,
-      timeline: [],
-      related_cases: [],
-      follow_ups: [
-        'How does Indian contract law apply generally here?',
-        'Specify another act or section to narrow down search.'
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({ text: summary.title || 'Judgment Summary', heading: HeadingLevel.HEADING_1 }),
+        new Paragraph({ text: `Court: ${summary.court || 'N/A'}` }),
+        new Paragraph({ text: `Date: ${summary.date || 'N/A'}` }),
+        new Paragraph({ text: 'Facts:', heading: HeadingLevel.HEADING_2 }),
+        ...(summary.facts || []).map(f => new Paragraph({ text: `• ${f}` })),
+        new Paragraph({ text: 'Issues:', heading: HeadingLevel.HEADING_2 }),
+        ...(summary.issues || []).map(i => new Paragraph({ text: `• ${i}` })),
+        new Paragraph({ text: 'Reasoning:', heading: HeadingLevel.HEADING_2 }),
+        new Paragraph({ text: summary.court_reasoning || '' }),
+        new Paragraph({ text: 'Verdict:', heading: HeadingLevel.HEADING_2 }),
+        new Paragraph({ text: summary.verdict || '' })
       ]
-    };
+    }]
+  });
+
+  Packer.toBuffer(doc).then(buffer => {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', 'attachment; filename=summary.docx');
+    res.send(buffer);
+  });
+});
+
+// Export summary in PDF format
+app.post('/api/summarizer/export/pdf', (req, res) => {
+  const { summary } = req.body;
+  if (!summary) {
+    return res.status(400).json({ error: 'Summary data is required' });
   }
 
-  // If sources are found
-  const acts = ragResults.acts;
-  const judgments = ragResults.judgments;
-  const mainAct = acts[0] || { name: 'Indian Statutes', section: 'applicable rules' };
-  const mainJudgment = judgments[0] || { name: 'landmark precedents', citation: '' };
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename=summary.pdf');
 
-  if (mode === 'deep') {
-    return {
-      is_legal: true,
-      query,
-      sources_found: true,
-      issue_summary: `Legal issue regarding ${displaySubject} under the provisions of ${mainAct.name}.`,
-      applicable_laws: acts.map(a => ({ act: a.name, section: a.section, description: a.description })),
-      judgments: judgments.map(j => ({ name: j.name, citation: j.citation, court: j.court, year: j.year, strength: 90, snippet: j.snippet })),
-      reasoning_summary: `Identified key statutes: ${acts.map(a => a.section).join(', ')}. Analyzed precedent in ${mainJudgment.name}.`,
-      arguments_for: [
-        `Compliance with the express wording of ${mainAct.section} protects the applicant's rights.`,
-        `The ratio decidendi in ${mainJudgment.name} supports a favorable interpretation of this dispute.`
-      ],
-      arguments_against: [
-        `Opposing counsel might argue lack of strict procedural adherence.`,
-        `Factual distinctions could limit the direct binding value of ${mainJudgment.name}.`
-      ],
-      potential_risks: [
-        `Risk of civil litigation delays under Section 73 Contract Act.`,
-        `Evidence collection burden to establish intention/consent.`
-      ],
-      analysis: `A detailed analysis of ${displaySubject} under Indian jurisprudence reveals strong grounding under ${mainAct.name}, ${mainAct.section}.\n\nAccording to ${mainAct.section}: "${mainAct.description}". This provision establishes the legal framework governing the transaction.\n\nFurthermore, the Supreme Court of India in ${mainJudgment.name} (${mainJudgment.citation}) held that: "${mainJudgment.snippet}". This precedent binds subordinate courts and outlines the criteria that must be satisfied to establish liability or seek relief.\n\n[DEMO MODE] This memorandum has been dynamically generated from offline indexes. To generate professional, comprehensive summaries via LLM, please configure your Gemini API Key in settings.`,
-      conclusion: `Based on the statutory rules of ${mainAct.section} and precedents like ${mainJudgment.name}, there is a viable case here, provided proper notices have been served.`,
-      confidence_score: 85,
-      timeline: ragResults.timeline,
-      related_cases: judgments.slice(1).map(j => ({ name: j.name, citation: j.citation, court: j.court })),
-      follow_ups: [
-        `What are the specific filings required under ${mainAct.name}?`,
-        `How does the ruling in ${mainJudgment.name} apply to corporate bodies?`
-      ],
-      graph: ragResults.graph
-    };
+  try {
+    generateSummaryPDF(summary, res);
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate PDF' });
+    }
+  }
+});
+
+
+// ── Phase 5: Contract Generator ──────────────────────────────
+app.post('/api/drafts/generate', verifyUser, checkUsageQuotas, async (req, res) => {
+  const { templateId, formData } = req.body;
+  const apiKey = getApiKey(req);
+
+  try {
+    const CONTRACT_SYSTEM = `You are a legal draft generator. Create a professional contract based on details.
+    Respond in JSON format:
+    {
+      "title": "Contract Title",
+      "content": "Full text of contract with numbered sections.",
+      "sections": ["Section 1 Title", "Section 2 Title"]
+    }`;
+
+    const prompt = `Template ID: ${templateId}\nInputs:\n${JSON.stringify(formData)}`;
+    const draft = await callGemini(apiKey, CHAT_MODEL, CONTRACT_SYSTEM, prompt);
+
+    await supabase.from('drafts').insert({
+      user_id: req.user.id,
+      title: draft.title || 'Legal Draft',
+      template_id: templateId,
+      content: draft.content,
+      form_inputs: formData
+    });
+
+    await supabase.rpc('increment_usage', { sub_id: req.userSubscription.id, column_name: 'usage_count_drafts' });
+
+    res.json(draft);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Clause Editing Modifiers
+app.post('/api/drafts/clause/modify', verifyUser, async (req, res) => {
+  const { clause, action } = req.body; // action: 'stricter' | 'simpler' | 'rewrite' | 'risks'
+  const apiKey = getApiKey(req);
+
+  try {
+    let instruction = '';
+    if (action === 'stricter') instruction = 'Make this legal clause stricter and favor the drafting party more aggressively under Indian law.';
+    else if (action === 'simpler') instruction = 'Rewrite this legal clause in plain, simple English that is easy to understand, while retaining complete legal enforceability.';
+    else if (action === 'risks') instruction = 'Analyze this clause and output a JSON list of key legal risks and missing protections.';
+    else instruction = 'Rewrite this clause professionally.';
+
+    const systemPrompt = action === 'risks' 
+      ? 'Output a JSON object: { "risks": ["Risk 1", "Risk 2"] }'
+      : 'Output a JSON object: { "content": "Modified clause text" }';
+
+    const response = await callGemini(apiKey, FAST_MODEL, systemPrompt, `${instruction}\n\nClause: "${clause}"`);
+    res.json(response);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Phase 6: Knowledge Base Semantic Search ──────────────────
+app.post('/api/knowledge-base/upload', verifyUser, async (req, res) => {
+  const { title, text, docType = 'user_upload' } = req.body;
+  const apiKey = getApiKey(req);
+
+  try {
+    // 1. Save document to profiles/org space
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', req.user.id).single();
+    
+    const { data: doc, error: docErr } = await supabase.from('documents').insert({
+      title,
+      content: text,
+      doc_type: docType,
+      uploaded_by: req.user.id,
+      organization_id: profile?.organization_id
+    }).select().single();
+
+    if (docErr) throw docErr;
+
+    // 2. Simple chunk uploader (1000 character boundaries)
+    const chunks = [];
+    const chunkSize = 1000;
+    for (let i = 0; i < text.length; i += chunkSize) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
+
+    // Embed chunks
+    for (const chunk of chunks) {
+      const embedding = await getGeminiEmbedding(apiKey, chunk);
+      await supabase.from('document_chunks').insert({
+        document_id: doc.id,
+        content: chunk,
+        embedding
+      });
+    }
+
+    res.json({ status: 'success', documentId: doc.id, totalChunks: chunks.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/knowledge-base/search', verifyUser, async (req, res) => {
+  const { query, filterDocType } = req.body;
+  const apiKey = getApiKey(req);
+
+  try {
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', req.user.id).single();
+    const queryVector = await getGeminiEmbedding(apiKey, query);
+
+    const { data: chunks, error } = await supabase.rpc('match_document_chunks', {
+      query_embedding: queryVector,
+      match_threshold: 0.3,
+      match_count: 5,
+      filter_doc_type: filterDocType,
+      filter_org_id: profile?.organization_id
+    });
+
+    if (error) throw error;
+    res.json(chunks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Phase 7: Razorpay webhook listener ────────────────────────
+app.post('/api/payments/webhook', async (req, res) => {
+  const signature = req.headers['x-razorpay-signature'];
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'secret';
+  
+  // Verify signature
+  const bodyString = JSON.stringify(req.body);
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(bodyString)
+    .digest('hex');
+
+  if (signature !== expectedSignature) {
+    return res.status(400).json({ error: 'Signature verification failed' });
   }
 
-  // Legal mode default
-  return {
-    is_legal: true,
-    query,
-    sources_found: true,
-    acts: acts.map(a => ({ name: a.name, section: a.section, description: a.description })),
-    judgments: judgments.map(j => ({ name: j.name, citation: j.citation, court: j.court, year: j.year, relevance: j.relevance, snippet: j.snippet })),
-    reasoning_summary: `Found statutory grounding in ${mainAct.name} (${mainAct.section}) and judicial authorities including ${mainJudgment.name}.`,
-    analysis: `In relation to your query on ${displaySubject}, the primary statutory provision is ${mainAct.section} of the ${mainAct.name}, which states that ${mainAct.description}.\n\nThis is reinforced by judicial precedents. Specifically, in ${mainJudgment.name} (${mainJudgment.citation}), the ${mainJudgment.court} established that ${mainJudgment.snippet}.\n\nIf you are drafting pleadings or advising a client, ensure that all the key ingredients of ${mainAct.section} are documented. For example, if there is a claim under Section 138 of the NI Act, verify the 30-day notice timeline.\n\n[DEMO MODE] Dynamically retrieved from local knowledge indexes. Configure your Gemini API Key in Settings to enable real-time web-connected legal analysis.`,
-    confidence_score: 80,
-    timeline: ragResults.timeline,
-    related_cases: judgments.slice(1).map(j => ({ name: j.name, citation: j.citation, court: j.court })),
-    follow_ups: [
-      `What is the limitation period under ${mainAct.name}?`,
-      `How to draft a legal notice citing ${mainJudgment.name}?`
-    ],
-    graph: ragResults.graph
-  };
-}
+  const event = req.body.event;
+  const payload = req.body.payload;
+
+  if (event === 'subscription.charged' || event === 'subscription.activated') {
+    const subId = payload.subscription.entity.id;
+    const notes = payload.subscription.entity.notes || {};
+    const userId = notes.userId;
+    const planTier = notes.planTier || 'pro'; // student, pro, firm, enterprise
+
+    await supabase
+      .from('subscriptions')
+      .update({
+        status: 'active',
+        plan_tier: planTier,
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        usage_count_research: 0,
+        usage_count_summaries: 0,
+        usage_count_drafts: 0
+      })
+      .eq('razorpay_subscription_id', subId);
+  }
+
+  res.json({ received: true });
+});
+
+// ── Phase 8: Global Search ────────────────────────────────────
+app.get('/api/search/global', verifyUser, async (req, res) => {
+  const query = req.query.q || '';
+  
+  try {
+    const documentsSearch = supabase
+      .from('documents')
+      .select('id, title, doc_type')
+      .textSearch('content', query)
+      .limit(5);
+
+    const historySearch = supabase
+      .from('research_history')
+      .select('id, query, answer')
+      .textSearch('query', query)
+      .limit(5);
+
+    const [docs, history] = await Promise.all([documentsSearch, historySearch]);
+
+    res.json({
+      documents: docs.data || [],
+      research: history.data || []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Phase 9: Notifications ────────────────────────────────────
+app.get('/api/notifications', verifyUser, async (req, res) => {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ── Phase 10: Investor Analytics Panel ────────────────────────
+app.get('/api/analytics/admin', verifyUser, async (req, res) => {
+  // Check if admin
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', req.user.id).single();
+  if (profile?.role !== 'researcher') { // Let researcher be admin role for demo
+    return res.status(403).json({ error: 'Unauthorized access to admin console' });
+  }
+
+  try {
+    // Analytics counters
+    const usersCount = supabase.from('profiles').select('*', { count: 'exact', head: true });
+    const docsCount = supabase.from('documents').select('*', { count: 'exact', head: true });
+    const subsCount = supabase.from('subscriptions').select('plan_tier, status');
+
+    const [users, docs, subs] = await Promise.all([usersCount, docsCount, subsCount]);
+
+    // Calculate billing aggregates
+    const activeSubs = (subs.data || []).filter(s => s.status === 'active');
+    const plansCount = activeSubs.reduce((acc, curr) => {
+      acc[curr.plan_tier] = (acc[curr.plan_tier] || 0) + 1;
+      return acc;
+    }, {});
+
+    res.json({
+      dau: Math.floor(Math.random() * 50) + 10, // Mocked telemetry analytics
+      wau: Math.floor(Math.random() * 200) + 50,
+      mau: users.count || 0,
+      total_documents: docs.count || 0,
+      active_subscriptions: activeSubs.length,
+      plans_breakdown: plansCount
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 NyayaGPT Express backend running on http://localhost:${PORT}`);
+  console.log(`🚀 NyayaGPT Production SaaS Backend running on http://localhost:${PORT}`);
 });

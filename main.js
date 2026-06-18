@@ -5,6 +5,7 @@
 
 import { router } from './utils/router.js';
 import { storage } from './utils/storage.js';
+import { supabase } from './services/supabase.js';
 
 // Pages
 import { renderLanding, initLanding } from './pages/landing.js';
@@ -22,6 +23,35 @@ import { renderWorkspace, initWorkspace } from './pages/workspace.js';
 // Components
 import { renderSidebar, initSidebar, updateSidebarActive } from './components/sidebar.js';
 import { renderTopbar, initTopbar } from './components/topbar.js';
+
+// ── Supabase Auth State Change Listener ─────────────────────
+if (supabase) {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+      const u = session.user;
+      const user = {
+        id: u.id,
+        name: u.user_metadata?.full_name || u.email.split('@')[0],
+        email: u.email,
+        role: u.user_metadata?.role || 'lawyer',
+        plan: 'student',
+        createdAt: u.created_at,
+      };
+      storage.setUser(user);
+      if (event === 'SIGNED_IN') {
+        const hash = window.location.hash;
+        if (hash === '#/login' || hash === '#/signup' || hash === '#/') {
+          router.navigate('/dashboard');
+        }
+      }
+    } else {
+      if (storage.isLoggedIn()) {
+        storage.logout();
+        router.navigate('/');
+      }
+    }
+  });
+}
 
 // ── Utility: Render page with app shell ─────────────────────
 
@@ -79,6 +109,7 @@ router.register('/login', () => {
   initLogin();
 });
 
+// Signup
 router.register('/signup', () => {
   if (storage.isLoggedIn()) {
     router.navigate('/dashboard');
@@ -153,9 +184,13 @@ router.register('/settings', (path) => {
 
 // Logout
 router.register('/logout', () => {
+  if (supabase) {
+    supabase.auth.signOut();
+  }
   storage.logout();
   router.navigate('/');
 });
+
 
 // 404
 router.register('/404', () => {
